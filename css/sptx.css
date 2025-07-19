@@ -1,55 +1,283 @@
+/* 重置样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  text-decoration: none;
+}
 
+body {
+  background: linear-gradient(135deg, #1a2a6c, #5f7df5, #1a2a6c);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  color: #333;
+  line-height: 1.6;
+  padding: 20px;
+  min-height: 100vh;
+}
 
-.main .box .sub-category > div {
-  padding: 12px 0 0 2.1%;
-  font-size: 18px;
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
-.main .box .item {
-  width: 20%;
-  border: 1px solid #e4ecf3;
-  box-shadow: 1px 2px 3px #f2f6f8;
-  border-radius: 6px;
-  background: #fff;
-  padding: 10px;
-  min-width: 200px;
-  margin: 22px 0 0 2.1%;
-  float: left;
-  overflow: hidden;
-  transition: all .3s;
+
+/* 头部样式 */
+header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
-.main .box .item:hover {
-  transform: translateY(-5px);
+
+header h1 {
+  font-size: 2.5rem;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  margin-bottom: 10px;
 }
-.main .box .item .no-logo {
-  color: #3273dc;
-  font-weight: bold;
-  font-size: 14px;
+
+header p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 0 auto;
 }
-.main .box .item .logo {
-  height: 40px;
+
+/* 搜索和筛选区域 */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.search-box {
   position: relative;
-  font-size: 14px;
-  font-weight: 700;
-  color: #3273dc;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 .1rem;
+  max-width: 500px;
+  width: 100%;
 }
-.main .box .item .logo img {
+
+.search-box input {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+  outline: none;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.filter-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 50px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  backdrop-filter: blur(5px);
+}
+
+.filter-btn:hover, .filter-btn.active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* 游戏网格布局 */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* 游戏卡片样式 */
+.game-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.game-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.game-image {
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+}
+
+.game-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.game-card:hover .game-image img {
+  transform: scale(1.05);
+}
+
+.game-tag {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #ff4757;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.game-content {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-title {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  color: #2f3542;
+  font-weight: 700;
+}
+
+.game-desc {
+  color: #747d8c;
+  font-size: 0.95rem;
+  margin-bottom: 15px;
+  flex-grow: 1;
+}
+
+.game-meta {
+  display: flex;
+  justify-content: space-between;
+  color: #a4b0be;
+  font-size: 0.85rem;
+}
+
+.play-btn {
+  display: block;
+  text-align: center;
+  background: #1e90ff;
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: bold;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+.play-btn:hover {
+  background: #3742fa;
+  transform: translateY(-2px);
+}
+
+/* 页脚样式 */
+footer {
+  text-align: center;
+  padding: 30px 0;
+  margin-top: 50px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .games-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .filter-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .game-image {
+    height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body {
+    padding: 15px;
+  }
+
+  header h1 {
+    font-size: 1.8rem;
+  }
+
+  .game-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* 加载动画 */
+.loading {
+  text-align: center;
+  padding: 30px;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.spinner {
   width: 40px;
   height: 40px;
+  margin: 20px auto;
+  border: 4px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  vertical-align: middle;
+  border-top: 4px solid #fff;
+  animation: spin 1s linear infinite;
 }
-.main .box .item .desc {
-  color: gray;
-  font-size: 12px;
-  padding-top: 10px;
-  height: 35px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
