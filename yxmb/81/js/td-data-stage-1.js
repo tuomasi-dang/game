@@ -166,7 +166,11 @@ _TD.a.push(function (TD) {
 							{
 								pos: [2, 2],
 								building: "wall"
-							}
+							},
+							{
+                                pos: [1, 1],
+                                building: "ice_tower" // 添加冰霜塔到 UI
+                            }
 						]
 					}
 				},

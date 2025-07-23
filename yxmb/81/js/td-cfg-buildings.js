@@ -90,7 +90,21 @@ _TD.a.push(function (TD) {
 				life: 100,
 				shield: 100,
 				cost: 2000
-			}
+			},
+
+			// 冰霜塔
+            "ice_tower": {
+                damage: 0, // 冰霜塔主要是减速，不造成伤害
+                range: 5,
+                max_range: 10,
+                speed: 2,
+                bullet_speed: 6,
+                life: 100,
+                shield: 100,
+                cost: 500,
+                freeze_duration: 3 * TD.exp_fps, // 冷冻持续时间
+                freeze_factor: 0.5 // 冷冻系数，例如 0.5 表示减速到原来的 50%
+            }
 		};
 
 		return building_attributes[building_type] || {};

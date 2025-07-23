@@ -223,7 +223,100 @@ _TD.a.push(function (TD) {
 			ctx.closePath();
 			ctx.fill();
 			ctx.stroke();
-		}
+		},
+		"ice_tower": function (b, ctx, map, gs, gs2) {
+            var target_position = b.getTargetPosition();
+            
+            // 底座
+            ctx.fillStyle = "#336";
+            ctx.strokeStyle = "#000";
+            ctx.beginPath();
+            ctx.lineWidth = _TD.retina;
+            ctx.arc(b.cx, b.cy, gs2 - 3, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 塔身
+            ctx.fillStyle = "#9cf";
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 8, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 冷冻装置
+            ctx.fillStyle = "#69f";
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 12, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // 枪管/发射口
+            ctx.lineWidth = 4 * _TD.retina;
+            ctx.strokeStyle = "#ccf";
+            ctx.beginPath();
+            ctx.moveTo(b.cx, b.cy);
+            b.muzzle = lineTo2(ctx, b.cx, b.cy, target_position[0], target_position[1], gs2 - 5);
+            ctx.closePath();
+            ctx.stroke();
+            
+            // 顶部冰晶装饰
+            var iceCrystalSize = 6 * _TD.retina;
+            ctx.strokeStyle = "#9cf";
+            ctx.lineWidth = 2 * _TD.retina;
+            
+            // 绘制6个方向的冰晶
+            for (var i = 0; i < 6; i++) {
+                var angle = (i / 6) * Math.PI * 2;
+                var x = b.cx + Math.cos(angle) * (gs2 - 12);
+                var y = b.cy + Math.sin(angle) * (gs2 - 12);
+                
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(
+                    x + Math.cos(angle) * iceCrystalSize,
+                    y + Math.sin(angle) * iceCrystalSize
+                );
+                ctx.stroke();
+                
+                // 冰晶分支
+                var branchAngle1 = angle + Math.PI / 3;
+                var branchAngle2 = angle - Math.PI / 3;
+                ctx.beginPath();
+                ctx.moveTo(
+                    x + Math.cos(angle) * iceCrystalSize * 0.5,
+                    y + Math.sin(angle) * iceCrystalSize * 0.5
+                );
+                ctx.lineTo(
+                    x + Math.cos(angle) * iceCrystalSize * 0.5 + Math.cos(branchAngle1) * iceCrystalSize * 0.4,
+                    y + Math.sin(angle) * iceCrystalSize * 0.5 + Math.sin(branchAngle1) * iceCrystalSize * 0.4
+                );
+                ctx.moveTo(
+                    x + Math.cos(angle) * iceCrystalSize * 0.5,
+                    y + Math.sin(angle) * iceCrystalSize * 0.5
+                );
+                ctx.lineTo(
+                    x + Math.cos(angle) * iceCrystalSize * 0.5 + Math.cos(branchAngle2) * iceCrystalSize * 0.4,
+                    y + Math.sin(angle) * iceCrystalSize * 0.5 + Math.sin(branchAngle2) * iceCrystalSize * 0.4
+                );
+                ctx.stroke();
+            }
+            
+            // 冷冻效果指示器
+            if (b.last_freeze_time && b.last_freeze_time > TD.now - TD.exp_fps) {
+                var freezeIndicatorSize = gs2 - 2;
+                var alpha = 1 - (TD.now - b.last_freeze_time) / TD.exp_fps;
+                
+                ctx.strokeStyle = "rgba(150, 200, 255, " + alpha + ")";
+                ctx.lineWidth = 3 * _TD.retina;
+                ctx.beginPath();
+                ctx.arc(b.cx, b.cy, freezeIndicatorSize, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
 	};
 
 	TD.renderBuilding = function (building) {

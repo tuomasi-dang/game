@@ -60,6 +60,9 @@ _TD.a.push(function (TD) {
 			this._dy = 0;
 
 			this.is_blocked = false; // 前进的道路是否被阻塞了
+            this.is_frozen = false; // 是否被冷冻
+            this.freeze_duration = 0; // 冷冻持续时间
+            this.original_speed = this.speed; // 原始速度
 		},
 		caculatePos: function () {
 //		if (!this.map) return;
@@ -91,6 +94,14 @@ _TD.a.push(function (TD) {
 			if (balloontip.el == this) {
 				balloontip.text = TD._t("monster_info", [this.life, this.shield, this.speed, this.damage]);
 			}
+
+			// 如果是冰霜塔攻击，触发冷冻效果
+            if (building.cfg.type === "ice_tower") {
+                var iceAttr = TD.getDefaultBuildingAttributes("ice_tower");
+                this.is_frozen = true;
+                this.freeze_duration = iceAttr.freeze_duration;
+                this.speed = this.original_speed * iceAttr.freeze_factor;
+            }
 
 		},
 
@@ -237,6 +248,15 @@ _TD.a.push(function (TD) {
 
 		step: function () {
 			if (!this.is_valid || this.is_paused || !this.grid) return;
+
+			// 处理冷冻效果
+            if (this.is_frozen) {
+                this.freeze_duration--;
+                if (this.freeze_duration <= 0) {
+                    this.is_frozen = false;
+                    this.speed = this.original_speed;
+                }
+            }
 
 			if (!this.next_grid) {
 				this.getNextGrid();
