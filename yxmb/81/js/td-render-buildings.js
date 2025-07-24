@@ -355,6 +355,88 @@ _TD.a.push(function (TD) {
                 ctx.closePath();
                 ctx.stroke();
             }
+        },
+        "poison_tower": function (b, ctx, map, gs, gs2) {
+            var target_position = b.getTargetPosition();
+            // 渐变底座
+            var grad = ctx.createRadialGradient(b.cx, b.cy, gs2 - 18, b.cx, b.cy, gs2 - 5);
+            grad.addColorStop(0, "#b0ffb0");
+            grad.addColorStop(0.7, "#393");
+            grad.addColorStop(1, "#262");
+            ctx.fillStyle = grad;
+            ctx.strokeStyle = "#000";
+            ctx.beginPath();
+            ctx.lineWidth = _TD.retina;
+            ctx.arc(b.cx, b.cy, gs2 - 5, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // 罐体（带毒液符号）
+            ctx.save();
+            var grad2 = ctx.createLinearGradient(b.cx, b.cy - gs2 + 12, b.cx, b.cy + gs2 - 12);
+            grad2.addColorStop(0, "#6f6");
+            grad2.addColorStop(1, "#393");
+            ctx.fillStyle = grad2;
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 13, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#0f0";
+            ctx.lineWidth = 2 * _TD.retina;
+            ctx.stroke();
+            // 毒液符号
+            ctx.strokeStyle = "#8f0";
+            ctx.lineWidth = 2 * _TD.retina;
+            ctx.beginPath();
+            ctx.moveTo(b.cx - 4 * _TD.retina, b.cy);
+            ctx.bezierCurveTo(b.cx, b.cy + 8 * _TD.retina, b.cx, b.cy - 8 * _TD.retina, b.cx + 4 * _TD.retina, b.cy);
+            ctx.stroke();
+            ctx.restore();
+            // 喷口（粗，带毒液滴）
+            ctx.lineWidth = 8 * _TD.retina;
+            ctx.strokeStyle = "#6f6";
+            ctx.beginPath();
+            ctx.moveTo(b.cx, b.cy);
+            b.muzzle = lineTo2(ctx, b.cx, b.cy, target_position[0], target_position[1], gs2);
+            ctx.closePath();
+            ctx.stroke();
+            // 喷口末端毒液滴
+            ctx.save();
+            ctx.fillStyle = "#8f8";
+            ctx.beginPath();
+            ctx.arc(b.muzzle[0], b.muzzle[1], 4 * _TD.retina, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.shadowColor = "#6f6";
+            ctx.shadowBlur = 8 * _TD.retina;
+            ctx.fill();
+            ctx.restore();
+            // 多层毒雾环
+            for (var i = 0; i < 3; i++) {
+                var r = gs2 - 8 + i * 4 * _TD.retina;
+                ctx.save();
+                ctx.strokeStyle = "rgba(100,255,100," + (0.18 - i * 0.05) + ")";
+                ctx.lineWidth = (2 - i * 0.5) * _TD.retina;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(b.cx, b.cy, r, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            }
+            // 荧光点缀
+            for (var j = 0; j < 5; j++) {
+                var angle = Math.random() * Math.PI * 2;
+                var rr = gs2 - 10 + Math.random() * 10 * _TD.retina;
+                var x = b.cx + Math.cos(angle) * rr;
+                var y = b.cy + Math.sin(angle) * rr;
+                ctx.save();
+                ctx.fillStyle = "rgba(180,255,180,0.7)";
+                ctx.beginPath();
+                ctx.arc(x, y, 1.5 * _TD.retina, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
         }
 	};
 

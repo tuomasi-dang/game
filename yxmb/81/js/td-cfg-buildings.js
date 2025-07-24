@@ -118,6 +118,19 @@ _TD.a.push(function (TD) {
                 cost: 1200,
                 chain_count: 3, // 连锁数
                 chain_range: 3 // 连锁跳跃最大距离（格）
+            },
+
+            "poison_tower": {
+                damage: 4, // 首次范围伤害
+                range: 4,
+                max_range: 8,
+                speed: 0.8, // 攻速更慢
+                bullet_speed: 6,
+                life: 100,
+                shield: 80,
+                cost: 900,
+                poison_damage: 2, // 持续伤害
+                poison_duration: 8 * TD.exp_fps // 持续时间（帧），更久
             }
 		};
 

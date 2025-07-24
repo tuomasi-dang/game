@@ -63,6 +63,9 @@ _TD.a.push(function (TD) {
             this.is_frozen = false; // 是否被冷冻
             this.freeze_duration = 0; // 冷冻持续时间
             this.original_speed = this.speed; // 原始速度
+            this.is_poisoned = false;
+            this.poison_damage = 0;
+            this.poison_duration = 0;
 		},
 		caculatePos: function () {
 //		if (!this.map) return;
@@ -80,6 +83,7 @@ _TD.a.push(function (TD) {
 		 */
 		beHit: function (building, damage) {
 			if (!this.is_valid) return;
+			this.last_attacker = building;
 			var min_damage = Math.ceil(damage * 0.1);
 			damage -= this.shield;
 			if (damage <= min_damage) damage = min_damage;
@@ -96,7 +100,7 @@ _TD.a.push(function (TD) {
 			}
 
 			// 如果是冰霜塔攻击，触发冷冻效果
-            if (building.cfg.type === "ice_tower") {
+            if (building && building.cfg && building.cfg.type === "ice_tower") {
                 var iceAttr = TD.getDefaultBuildingAttributes("ice_tower");
                 this.is_frozen = true;
                 this.freeze_duration = iceAttr.freeze_duration;
@@ -115,7 +119,9 @@ _TD.a.push(function (TD) {
 			this.is_valid = false;
 
 			TD.money += this.money;
-			building.killed++;
+			if (building && building.killed !== undefined) {
+				building.killed++;
+			}
 
 			TD.Explode(this.id + "-explode", {
 				cx: this.cx,
@@ -255,6 +261,21 @@ _TD.a.push(function (TD) {
                 if (this.freeze_duration <= 0) {
                     this.is_frozen = false;
                     this.speed = this.original_speed;
+                }
+            }
+
+			// 处理中毒持续伤害
+            if (this.is_poisoned) {
+                this.poison_duration--;
+                if (this.poison_duration > 0) {
+                    this.life -= this.poison_damage;
+                    if (this.life <= 0) {
+                        this.beKilled(this.last_attacker);
+                        return;
+                    }
+                } else {
+                    this.is_poisoned = false;
+                    this.poison_damage = 0;
                 }
             }
 

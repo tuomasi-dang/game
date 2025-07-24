@@ -220,9 +220,9 @@ _TD.a.push(function (TD) {
 		 */
 		fire: function () {
 			if (this.type == "ice_tower") {
-				// 冰霜塔：范围减速和伤害
 				var b = this;
 				var range2 = Math.pow(this.range_px, 2);
+				var iceAttr = TD.getDefaultBuildingAttributes("ice_tower");
 				var now = TD.now || (new Date()).getTime();
 				var affected = false;
 				this.map.eachMonster(function (monster) {
@@ -230,10 +230,7 @@ _TD.a.push(function (TD) {
 					var dx = monster.cx - b.cx;
 					var dy = monster.cy - b.cy;
 					if (dx * dx + dy * dy <= range2) {
-						// 造成伤害
 						monster.beHit(b, b.damage);
-						// 触发冷冻效果
-						var iceAttr = TD.getDefaultBuildingAttributes("ice_tower");
 						monster.is_frozen = true;
 						monster.freeze_duration = iceAttr.freeze_duration;
 						monster.speed = monster.original_speed * iceAttr.freeze_factor;
@@ -242,8 +239,7 @@ _TD.a.push(function (TD) {
 				});
 				if (affected) {
 					this.last_freeze_time = now;
-					// 添加波纹特效
-					TD.IceWave("icewave-" + this.id + "-" + now, {
+					TD.IceWave && TD.IceWave("icewave-" + this.id + "-" + now, {
 						cx: this.cx,
 						cy: this.cy,
 						r0: this.range_px * 0.5,
@@ -320,6 +316,46 @@ _TD.a.push(function (TD) {
 				return;
 			}
 
+			if (this.type == "poison_tower") {
+				var b = this;
+				var range2 = Math.pow(this.range_px, 2);
+				var attr = TD.getDefaultBuildingAttributes("poison_tower");
+				// 收集范围内所有怪物
+				var candidates = [];
+				this.map.eachMonster(function (monster) {
+					if (!monster.is_valid) return;
+					var dx = monster.cx - b.cx;
+					var dy = monster.cy - b.cy;
+					if (dx * dx + dy * dy <= range2) {
+						candidates.push(monster);
+					}
+				});
+				if (candidates.length === 0) {
+					this._last_poison_effect = false;
+					return;
+				}
+				// 随机选一个
+				var idx = Math.floor(Math.random() * candidates.length);
+				var target = candidates[idx];
+				var spray_angle = Math.atan2(target.cy - this.cy, target.cx - this.cx);
+				// 发射水滴状毒液子弹
+				var muzzle = this.muzzle || [this.cx, this.cy];
+				new TD.PoisonBullet(null, {
+					building: this,
+					damage: this.damage,
+					target: target,
+					speed: this.bullet_speed,
+					x: muzzle[0],
+					y: muzzle[1],
+					poison_damage: attr.poison_damage,
+					poison_duration: attr.poison_duration
+				});
+				this._last_poison_spray_angle = spray_angle;
+				this._last_poison_effect = true;
+				this._last_poison_target = target;
+				return;
+			}
+
 			var muzzle = this.muzzle || [this.cx, this.cy], // 炮口的位置
 				cx = muzzle[0],
 				cy = muzzle[1];
@@ -344,6 +380,31 @@ _TD.a.push(function (TD) {
 			} else if (this._fire_wait < 0) {
 				this._fire_wait = this._fire_wait2;
 			} else {
+				// 只在真正攻击触发时生成特效
+				if (this.type == "poison_tower") {
+					var now = TD.now || (new Date()).getTime();
+					this.fire(); // 先执行伤害和状态
+					if (this._last_poison_effect && this._last_poison_target) {
+						TD.PoisonCloud && TD.PoisonCloud("poisoncloud-spray-" + this.id + "-" + now, {
+							cx: this.cx,
+							cy: this.cy,
+							r: this.range_px,
+							scene: this.grid.scene,
+							angle: this._last_poison_spray_angle,
+							mode: "spray",
+							time: 0.22
+						});
+						TD.PoisonCloud && TD.PoisonCloud("poisoncloud-" + this.id + "-" + now, {
+							cx: this.cx,
+							cy: this.cy,
+							r: this.range_px,
+							scene: this.grid.scene,
+							mode: "cloud",
+							time: 0.5
+						});
+					}
+					return;
+				}
 				this.fire();
 			}
 		},
@@ -760,6 +821,209 @@ _TD.a.push(function (TD) {
 		TD.lang.mix(chain, emp_chain_obj);
 		chain._init(cfg);
 		return chain;
+	};
+
+	// 优化版毒雾喷射塔毒雾特效对象
+	var poison_cloud_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.cx = cfg.cx;
+			this.cy = cfg.cy;
+			this.r = cfg.r || 40;
+			this.time = cfg.time || 0.5;
+			this.wait = this.wait0 = Math.max(1, Math.floor(TD.exp_fps * this.time));
+			this.scene = cfg.scene;
+			this.angle = cfg.angle || 0; // 喷射方向
+			this.is_valid = true;
+			this.is_visiable = true;
+			this.mode = cfg.mode || "cloud"; // "spray" or "cloud"
+			this.particles = [];
+			if (this.mode === "spray") {
+				// 生成喷射粒子
+				var count = 8;
+				for (var i = 0; i < count; i++) {
+					var a = this.angle + (Math.random() - 0.5) * Math.PI / 6;
+					var d = this.r * (0.5 + Math.random() * 0.5);
+					this.particles.push({
+						x: this.cx,
+						y: this.cy,
+						dx: Math.cos(a) * d / this.wait0,
+						dy: Math.sin(a) * d / this.wait0,
+						r: 2 + Math.random() * 2,
+						color: Math.random() > 0.5 ? "#8f8" : "#6f6"
+					});
+				}
+			}
+			if (this.scene) this.scene.addElement(this, 1, 6);
+		},
+		step: function() {
+			if (!this.is_valid) return;
+			this.wait--;
+			if (this.mode === "spray") {
+				for (var i = 0; i < this.particles.length; i++) {
+					this.particles[i].x += this.particles[i].dx;
+					this.particles[i].y += this.particles[i].dy;
+				}
+			}
+			if (this.wait <= 0) this.is_valid = false;
+		},
+		render: function() {
+			if (!this.is_visiable) return;
+			var ctx = TD.ctx;
+			var alpha = Math.max(0, 0.22 * this.wait / this.wait0);
+			ctx.save();
+			if (this.mode === "spray") {
+				// 扇形雾带
+				ctx.beginPath();
+				ctx.moveTo(this.cx, this.cy);
+				ctx.arc(this.cx, this.cy, this.r * 0.7, this.angle - Math.PI / 7, this.angle + Math.PI / 7, false);
+				ctx.closePath();
+				ctx.fillStyle = "rgba(100,255,100," + (alpha * 0.7) + ")";
+				ctx.fill();
+				// 粒子
+				for (var i = 0; i < this.particles.length; i++) {
+					var p = this.particles[i];
+					ctx.beginPath();
+					ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2, true);
+					ctx.closePath();
+					ctx.fillStyle = p.color;
+					ctx.globalAlpha = alpha * 0.8;
+					ctx.fill();
+				}
+				ctx.globalAlpha = 1;
+			} else {
+				// 大范围毒雾云
+				ctx.fillStyle = "rgba(100,255,100," + alpha + ")";
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, this.r, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.fill();
+				// 锯齿边缘
+				for (var j = 0; j < 12; j++) {
+					var a = Math.PI * 2 * j / 12 + Math.random() * 0.2;
+					var rr = this.r * (0.92 + Math.random() * 0.12);
+					ctx.beginPath();
+					ctx.arc(this.cx + Math.cos(a) * rr, this.cy + Math.sin(a) * rr, 3 + Math.random() * 2, 0, Math.PI * 2, true);
+					ctx.closePath();
+					ctx.fillStyle = "rgba(100,255,100," + (alpha * 0.5) + ")";
+					ctx.fill();
+				}
+			}
+			ctx.restore();
+		}
+	};
+
+	/**
+	 * 创建毒雾喷射塔毒雾特效
+	 * @param id {String}
+	 * @param cfg {Object} 需包含 cx, cy, r, scene, angle, mode
+	 */
+	TD.PoisonCloud = function(id, cfg) {
+		var cloud = new TD.Element(id, cfg);
+		TD.lang.mix(cloud, poison_cloud_obj);
+		cloud._init(cfg);
+		return cloud;
+	};
+
+	// 水滴状毒液子弹对象
+	var poison_bullet_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.speed = cfg.speed;
+			this.damage = cfg.damage;
+			this.target = cfg.target;
+			this.cx = cfg.x;
+			this.cy = cfg.y;
+			this.r = 7; // 水滴头部半径
+			this.building = cfg.building || null;
+			this.map = cfg.map || this.building.map;
+			this.type = 4; // 特殊类型
+			this.color = cfg.color || "#8f8";
+			this.poison_damage = cfg.poison_damage;
+			this.poison_duration = cfg.poison_duration;
+			this.map.bullets.push(this);
+			this.addToScene(this.map.scene, 1, 6);
+			this.caculate();
+		},
+		caculate: function() {
+			var sx, sy, c,
+				tx = this.target.cx,
+				ty = this.target.cy,
+				speed;
+			sx = tx - this.cx;
+			sy = ty - this.cy;
+			c = Math.sqrt(Math.pow(sx, 2) + Math.pow(sy, 2));
+			speed = 20 * this.speed * TD.global_speed;
+			this.vx = sx * speed / c;
+			this.vy = sy * speed / c;
+		},
+		checkOutOfMap: function() {
+			this.is_valid = !(
+				this.cx < this.map.x ||
+				this.cx > this.map.x2 ||
+				this.cy < this.map.y ||
+				this.cy > this.map.y2
+			);
+			return !this.is_valid;
+		},
+		checkHit: function() {
+			var cx = this.cx,
+				cy = this.cy,
+				r = this.r * _TD.retina,
+				monster = this.target && this.target.is_valid ? this.target : null;
+			if (monster && Math.pow(monster.cx - cx, 2) + Math.pow(monster.cy - cy, 2) <= Math.pow(monster.r + r, 2) * 2) {
+				// 命中
+				monster.beHit(this.building, this.damage);
+				monster.is_poisoned = true;
+				monster.poison_damage = this.poison_damage;
+				monster.poison_duration = this.poison_duration;
+				this.is_valid = false;
+				// 小爆炸效果
+				TD.PoisonCloud && TD.PoisonCloud(this.id + "-explode", {
+					cx: this.cx,
+					cy: this.cy,
+					r: this.r * 1.2,
+					scene: this.map.scene,
+					mode: "cloud",
+					time: 0.18
+				});
+				return true;
+			}
+			return false;
+		},
+		step: function() {
+			if (this.checkOutOfMap() || this.checkHit()) return;
+			this.cx += this.vx;
+			this.cy += this.vy;
+		},
+		render: function() {
+			var ctx = TD.ctx;
+			// 水滴头部
+			ctx.save();
+			ctx.fillStyle = "#8f8";
+			ctx.beginPath();
+			ctx.arc(this.cx, this.cy, this.r, Math.PI * 0.25, Math.PI * 1.75, false);
+			ctx.closePath();
+			ctx.fill();
+			// 水滴尾部
+			ctx.beginPath();
+			ctx.moveTo(this.cx, this.cy);
+			ctx.quadraticCurveTo(this.cx - this.r * 0.7, this.cy + this.r * 2.2, this.cx, this.cy + this.r * 2.8);
+			ctx.quadraticCurveTo(this.cx + this.r * 0.7, this.cy + this.r * 2.2, this.cx, this.cy);
+			ctx.closePath();
+			ctx.fillStyle = "#6f6";
+			ctx.globalAlpha = 0.7;
+			ctx.fill();
+			ctx.globalAlpha = 1;
+			ctx.restore();
+		}
+	};
+
+	TD.PoisonBullet = function(id, cfg) {
+		var bullet = new TD.Element(id, cfg);
+		TD.lang.mix(bullet, poison_bullet_obj);
+		bullet._init(cfg);
+		return bullet;
 	};
 
 }); // _TD.a.push end
