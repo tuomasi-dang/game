@@ -154,7 +154,8 @@ _TD.a.push(function (TD) {
 							{ pos: [1, 1], building: "emp_cannon" },
 							{ pos: [2, 1], building: "laser_gun" },
 							{ pos: [0, 2], building: "wall" },
-							{ pos: [1, 2], building: "poison_tower" }
+							{ pos: [1, 2], building: "poison_tower" },
+							{ pos: [2, 2], building: "missile_silo" }
 						]
 					}
 				},

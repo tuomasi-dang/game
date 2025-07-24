@@ -437,6 +437,47 @@ _TD.a.push(function (TD) {
                 ctx.fill();
                 ctx.restore();
             }
+        },
+        "missile_silo": function (b, ctx, map, gs, gs2) {
+            var target_position = b.getTargetPosition();
+            // 井口
+            ctx.save();
+            ctx.fillStyle = "#222";
+            ctx.strokeStyle = "#000";
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 4, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // 红色警示圈
+            ctx.strokeStyle = "#f44";
+            ctx.lineWidth = 3 * _TD.retina;
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 8, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            // 导弹（静态）
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.ellipse(b.cx, b.cy, 7 * _TD.retina, 16 * _TD.retina, 0, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#888";
+            ctx.lineWidth = 2 * _TD.retina;
+            ctx.beginPath();
+            ctx.moveTo(b.cx, b.cy + 16 * _TD.retina);
+            ctx.lineTo(b.cx, b.cy + 22 * _TD.retina);
+            ctx.stroke();
+            // 井盖分割线
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 1.5 * _TD.retina;
+            ctx.beginPath();
+            ctx.moveTo(b.cx - gs2 + 8, b.cy);
+            ctx.lineTo(b.cx + gs2 - 8, b.cy);
+            ctx.stroke();
+            ctx.restore();
         }
 	};
 

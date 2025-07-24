@@ -219,6 +219,20 @@ _TD.a.push(function (TD) {
 		 * 向自己的目标开火
 		 */
 		fire: function () {
+			if (this.type == "missile_silo") {
+				if (!this.target || !this.target.is_valid) return;
+				var muzzle = this.muzzle || [this.cx, this.cy];
+				new TD.MissileBullet(null, {
+					building: this,
+					damage: this.damage,
+					target: this.target,
+					speed: this.bullet_speed,
+					x: muzzle[0],
+					y: muzzle[1]
+				});
+				return;
+			}
+
 			if (this.type == "ice_tower") {
 				var b = this;
 				var range2 = Math.pow(this.range_px, 2);
@@ -1026,5 +1040,140 @@ _TD.a.push(function (TD) {
 		return bullet;
 	};
 
+	// 导弹子弹对象
+	var missile_bullet_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.speed = cfg.speed;
+			this.damage = cfg.damage;
+			this.target = cfg.target;
+			this.cx = cfg.x;
+			this.cy = cfg.y;
+			this.r = 10; // 导弹头部半径
+			this.building = cfg.building || null;
+			this.map = cfg.map || this.building.map;
+			this.type = 5; // 特殊类型
+			this.color = cfg.color || "#fff";
+			this.map.bullets.push(this);
+			this.addToScene(this.map.scene, 1, 6);
+			this.caculate();
+			this._trail = [];
+		},
+		caculate: function() {
+			var sx, sy, c,
+				tx = this.target.cx,
+				ty = this.target.cy,
+				speed;
+			sx = tx - this.cx;
+			sy = ty - this.cy;
+			c = Math.sqrt(Math.pow(sx, 2) + Math.pow(sy, 2));
+			speed = 20 * this.speed * TD.global_speed;
+			this.vx = sx * speed / c;
+			this.vy = sy * speed / c;
+		},
+		checkOutOfMap: function() {
+			this.is_valid = !(
+				this.cx < this.map.x ||
+				this.cx > this.map.x2 ||
+				this.cy < this.map.y ||
+				this.cy > this.map.y2
+			);
+			return !this.is_valid;
+		},
+		checkHit: function() {
+			var cx = this.cx,
+				cy = this.cy,
+				r = this.r * _TD.retina,
+				monster = this.target && this.target.is_valid ? this.target : null;
+			if (monster && Math.pow(monster.cx - cx, 2) + Math.pow(monster.cy - cy, 2) <= Math.pow(monster.r + r, 2) * 2) {
+				// 命中
+				monster.beHit(this.building, this.damage);
+				this.is_valid = false;
+				// 爆炸特效
+				if (TD.Explode && TD._explode_count < MAX_EXPLODE_COUNT) {
+					var exp = TD.Explode(this.id + "-explode", {
+						cx: this.cx,
+						cy: this.cy,
+						r: this.r * 2.2,
+						color: "#fff",
+						scene: this.map.scene,
+						time: 0.18
+					});
+					if (!exp) return true;
+				}
+				return true;
+			}
+			return false;
+		},
+		step: function() {
+			if (this.checkOutOfMap() || this.checkHit()) return;
+			this._trail.push([this.cx, this.cy]);
+			if (this._trail.length > 12) this._trail.shift();
+			this.cx += this.vx;
+			this.cy += this.vy;
+		},
+		render: function() {
+			var ctx = TD.ctx;
+			// 轨迹
+			ctx.save();
+			for (var i = 0; i < this._trail.length; i++) {
+				ctx.globalAlpha = 0.08 + 0.12 * i / this._trail.length;
+				ctx.beginPath();
+				ctx.arc(this._trail[i][0], this._trail[i][1], 4, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.fillStyle = "#ff0";
+				ctx.fill();
+			}
+			ctx.globalAlpha = 1;
+			// 导弹头部
+			ctx.fillStyle = "#fff";
+			ctx.beginPath();
+			ctx.arc(this.cx, this.cy, this.r, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fill();
+			// 导弹尾焰
+			ctx.beginPath();
+			ctx.moveTo(this.cx, this.cy + this.r);
+			ctx.lineTo(this.cx - 6, this.cy + this.r + 18);
+			ctx.lineTo(this.cx + 6, this.cy + this.r + 18);
+			ctx.closePath();
+			ctx.fillStyle = "#f90";
+			ctx.globalAlpha = 0.7;
+			ctx.fill();
+			ctx.globalAlpha = 1;
+			ctx.restore();
+		}
+	};
+
+	TD.MissileBullet = function(id, cfg) {
+		var bullet = new TD.Element(id, cfg);
+		TD.lang.mix(bullet, missile_bullet_obj);
+		bullet._init(cfg);
+		return bullet;
+	};
+
 }); // _TD.a.push end
+
+// TD.Explode 优化：限制爆炸特效数量
+var MAX_EXPLODE_COUNT = 30;
+TD._explode_count = 0;
+var old_Explode = TD.Explode;
+TD.Explode = function(id, cfg) {
+    TD._explode_count = TD._explode_count || 0;
+    // 限制同一时刻爆炸特效数量
+    if (TD._explode_count >= MAX_EXPLODE_COUNT) return null;
+    // 缩短持续时间，减小半径
+    cfg = cfg || {};
+    cfg.time = Math.min(cfg.time || 0.25, 0.25);
+    cfg.r = Math.max(1, (cfg.r || 10) * 0.8);
+    var exp = old_Explode(id, cfg);
+    TD._explode_count++;
+    // 自动减少计数
+    var old_step = exp.step;
+    exp.step = function() {
+        old_step.call(this);
+        if (!this.is_valid && TD._explode_count > 0) TD._explode_count--;
+    };
+    return exp;
+};
 
