@@ -104,6 +104,20 @@ _TD.a.push(function (TD) {
                 cost: 500,
                 freeze_duration: 3 * TD.exp_fps, // 冷冻持续时间
                 freeze_factor: 0.4 // 冷冻系数，例如 0.4 表示减速到原来的 40%
+            },
+			
+			// EMP炮
+            "emp_cannon": {
+                damage: 10, // EMP炮单体伤害
+                range: 5,
+                max_range: 8,
+                speed: 1.5,
+                bullet_speed: 8,
+                life: 100,
+                shield: 120,
+                cost: 1200,
+                chain_count: 3, // 连锁数
+                chain_range: 3 // 连锁跳跃最大距离（格）
             }
 		};
 

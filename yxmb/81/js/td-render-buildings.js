@@ -316,6 +316,45 @@ _TD.a.push(function (TD) {
                 ctx.closePath();
                 ctx.stroke();
             }
+        },
+        "emp_cannon": function (b, ctx, map, gs, gs2) {
+            var target_position = b.getTargetPosition();
+            // 炮台底座
+            ctx.fillStyle = "#224";
+            ctx.strokeStyle = "#000";
+            ctx.beginPath();
+            ctx.lineWidth = _TD.retina;
+            ctx.arc(b.cx, b.cy, gs2 - 5, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // 炮身
+            ctx.fillStyle = "#0cf";
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 12, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            // 炮管
+            ctx.lineWidth = 5 * _TD.retina;
+            ctx.strokeStyle = "#0ff";
+            ctx.beginPath();
+            ctx.moveTo(b.cx, b.cy);
+            b.muzzle = lineTo2(ctx, b.cx, b.cy, target_position[0], target_position[1], gs2);
+            ctx.closePath();
+            ctx.stroke();
+            // 电容线圈装饰
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2 * _TD.retina;
+            for (var i = 0; i < 3; i++) {
+                var angle = Math.PI * 2 * i / 3;
+                var x = b.cx + Math.cos(angle) * (gs2 - 8);
+                var y = b.cy + Math.sin(angle) * (gs2 - 8);
+                ctx.beginPath();
+                ctx.arc(x, y, 4 * _TD.retina, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.stroke();
+            }
         }
 	};
 

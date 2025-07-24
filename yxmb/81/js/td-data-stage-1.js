@@ -147,30 +147,13 @@ _TD.a.push(function (TD) {
 						x: 0,
 						y: 110 * _TD.retina,
 						grids_cfg: [
-							{
-								pos: [0, 0],
-								building: "cannon"
-							},
-							{
-								pos: [1, 0],
-								building: "LMG"
-							},
-							{
-								pos: [2, 0],
-								building: "HMG"
-							},
-							{
-								pos: [0, 1],
-								building: "laser_gun"
-							},
-							{
-								pos: [2, 2],
-								building: "wall"
-							},
-							{
-                                pos: [1, 1],
-                                building: "ice_tower" // 添加冰霜塔到 UI
-                            }
+							{ pos: [0, 0], building: "LMG" },
+							{ pos: [1, 0], building: "cannon" },
+							{ pos: [2, 0], building: "HMG" },
+							{ pos: [0, 1], building: "ice_tower" },
+							{ pos: [1, 1], building: "emp_cannon" },
+							{ pos: [2, 1], building: "laser_gun" },
+							{ pos: [0, 2], building: "wall" }
 						]
 					}
 				},

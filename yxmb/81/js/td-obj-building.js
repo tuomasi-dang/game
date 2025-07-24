@@ -255,6 +255,63 @@ _TD.a.push(function (TD) {
 				return;
 			}
 
+			if (this.type == "emp_cannon") {
+				// EMP炮：连锁攻击
+				if (!this.target || !this.target.is_valid) return;
+				var b = this;
+				var attr = TD.getDefaultBuildingAttributes("emp_cannon");
+				var chain_count = attr.chain_count || 3;
+				var chain_range = (attr.chain_range || 3) * TD.grid_size;
+				var hit_list = [];
+				var current = this.target;
+				hit_list.push(current);
+				for (var i = 1; i < chain_count; i++) {
+					// 在剩余怪物中找距离current最近的
+					var min_dist = Infinity, next = null;
+					b.map.eachMonster(function (m) {
+						if (!m.is_valid || hit_list.indexOf(m) !== -1) return;
+						var dx = m.cx - current.cx;
+						var dy = m.cy - current.cy;
+						var dist = dx * dx + dy * dy;
+						if (dist <= chain_range * chain_range && dist < min_dist) {
+							min_dist = dist;
+							next = m;
+						}
+					});
+					if (next) {
+						hit_list.push(next);
+						current = next;
+					} else {
+						break;
+					}
+				}
+				// 依次造成伤害并画连锁特效
+				var muzzle = this.muzzle || [this.cx, this.cy];
+				var last_pos = muzzle;
+				for (var j = 0; j < hit_list.length; j++) {
+					var m = hit_list[j];
+					m.beHit(this, this.damage);
+					// 画连锁线特效（连锁跳跃）
+					if (j === 0) {
+						TD.EMPChain && TD.EMPChain("empchain-" + this.id + "-" + m.id + "-0", {
+							x0: last_pos[0], y0: last_pos[1], x1: m.cx, y1: m.cy, scene: this.grid.scene
+						});
+					} else {
+						TD.EMPChain && TD.EMPChain("empchain-" + this.id + "-" + m.id + "-" + j, {
+							x0: last_pos[0], y0: last_pos[1], x1: m.cx, y1: m.cy, scene: this.grid.scene
+						});
+					}
+					// 新增：每个目标都与炮台本身画一条电流
+					if (j > 0) {
+						TD.EMPChain && TD.EMPChain("empchain-center-" + this.id + "-" + m.id + "-" + j, {
+							x0: this.cx, y0: this.cy, x1: m.cx, y1: m.cy, scene: this.grid.scene
+						});
+					}
+					last_pos = [m.cx, m.cy];
+				}
+				return;
+			}
+
 			if (!this.target || !this.target.is_valid) return;
 
 			if (this.type == "laser_gun") {
@@ -644,6 +701,65 @@ _TD.a.push(function (TD) {
 		TD.lang.mix(wave, ice_wave_obj);
 		wave._init(cfg);
 		return wave;
+	};
+
+	// EMP炮连锁攻击特效对象
+	var emp_chain_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.x0 = cfg.x0;
+			this.y0 = cfg.y0;
+			this.x1 = cfg.x1;
+			this.y1 = cfg.y1;
+			this.time = cfg.time || 0.18;
+			this.wait = this.wait0 = Math.max(1, Math.floor(TD.exp_fps * this.time));
+			this.scene = cfg.scene;
+			this.is_valid = true;
+			this.is_visiable = true;
+			if (this.scene) this.scene.addElement(this, 1, 7);
+			// 生成闪电链的抖动点
+			this.points = [];
+			var n = 6;
+			for (var i = 1; i < n; i++) {
+				var t = i / n;
+				var px = this.x0 + (this.x1 - this.x0) * t + (Math.random() - 0.5) * 12;
+				var py = this.y0 + (this.y1 - this.y0) * t + (Math.random() - 0.5) * 12;
+				this.points.push([px, py]);
+			}
+		},
+		step: function() {
+			if (!this.is_valid) return;
+			this.wait--;
+			if (this.wait <= 0) this.is_valid = false;
+		},
+		render: function() {
+			if (!this.is_visiable) return;
+			var ctx = TD.ctx;
+			var alpha = Math.max(0, 0.7 * this.wait / this.wait0);
+			ctx.save();
+			ctx.strokeStyle = "rgba(0,255,255," + alpha + ")";
+			ctx.lineWidth = 3 * _TD.retina;
+			ctx.beginPath();
+			ctx.moveTo(this.x0, this.y0);
+			for (var i = 0; i < this.points.length; i++) {
+				ctx.lineTo(this.points[i][0], this.points[i][1]);
+			}
+			ctx.lineTo(this.x1, this.y1);
+			ctx.stroke();
+			ctx.restore();
+		}
+	};
+
+	/**
+	 * 创建EMP连锁攻击特效
+	 * @param id {String}
+	 * @param cfg {Object} 需包含 x0, y0, x1, y1, scene
+	 */
+	TD.EMPChain = function(id, cfg) {
+		var chain = new TD.Element(id, cfg);
+		TD.lang.mix(chain, emp_chain_obj);
+		chain._init(cfg);
+		return chain;
 	};
 
 }); // _TD.a.push end
