@@ -370,6 +370,94 @@ _TD.a.push(function (TD) {
 				return;
 			}
 
+			if (this.type == "energy_absorber") {
+				var b = this;
+				var range2 = Math.pow(this.range_px, 2);
+				var attr = TD.getDefaultBuildingAttributes("energy_absorber");
+				// 收集范围内所有怪物
+				var candidates = [];
+				this.map.eachMonster(function (monster) {
+					if (!monster.is_valid) return;
+					var dx = monster.cx - b.cx;
+					var dy = monster.cy - b.cy;
+					if (dx * dx + dy * dy <= range2) {
+						candidates.push(monster);
+					}
+				});
+				if (candidates.length === 0) return;
+				// 随机选一个
+				var idx = Math.floor(Math.random() * candidates.length);
+				var target = candidates[idx];
+				// 造成伤害
+				var real_damage = Math.min(target.life, this.damage);
+				target.beHit(this, this.damage);
+				// 吸收部分转为金钱
+				var gain = Math.floor(real_damage * attr.absorb_ratio);
+				if (gain > 0) TD.money += gain;
+				// 生成吸收特效（简化，防止卡死）
+				if (TD._absorb_count === undefined) TD._absorb_count = 0;
+				var MAX_ABSORB_EFFECT = 12;
+				if (TD._absorb_count < MAX_ABSORB_EFFECT) {
+					TD._absorb_count++;
+					var scene = this.grid.scene;
+					var effect = new TD.Element("absorb-" + Math.random(), {});
+					effect.is_valid = true;
+					effect.is_visiable = true;
+					effect.wait = Math.floor(TD.exp_fps * 0.32);
+					effect.cx = target.cx;
+					effect.cy = target.cy;
+					effect.tx = this.cx;
+					effect.ty = this.cy;
+					effect.step = function() {
+						this.wait--;
+						if (this.wait <= 0) { this.is_valid = false; TD._absorb_count--; }
+					};
+					effect.render = function() {
+						if (!this.is_valid) return;
+						var ctx = TD.ctx;
+						ctx.save();
+						// 主吸收线
+						ctx.strokeStyle = "#0ff";
+						ctx.lineWidth = 4 * _TD.retina;
+						ctx.globalAlpha = 0.85;
+						ctx.beginPath();
+						ctx.moveTo(this.cx, this.cy);
+						ctx.lineTo(this.tx, this.ty);
+						ctx.stroke();
+						// 动态流动副线
+						var t = Date.now() / 120;
+						for (var i = 0; i < 2; i++) {
+							ctx.beginPath();
+							ctx.moveTo(this.cx, this.cy);
+							var midx = (this.cx + this.tx) / 2 + Math.sin(t + i) * 10;
+							var midy = (this.cy + this.ty) / 2 + Math.cos(t + i) * 10;
+							ctx.quadraticCurveTo(midx, midy, this.tx, this.ty);
+							ctx.strokeStyle = i === 0 ? "#6ff" : "#fff";
+							ctx.lineWidth = 2 * _TD.retina;
+							ctx.globalAlpha = 0.5;
+							ctx.stroke();
+						}
+						// 粒子头部
+						var p = this.wait / Math.floor(TD.exp_fps * 0.32);
+						var px = this.cx + (this.tx - this.cx) * (1 - p);
+						var py = this.cy + (this.ty - this.cy) * (1 - p);
+						ctx.beginPath();
+						ctx.arc(px, py, 7 * _TD.retina, 0, Math.PI * 2, true);
+						ctx.closePath();
+						ctx.fillStyle = "#aff";
+						ctx.globalAlpha = 0.7;
+						ctx.shadowColor = "#fff";
+						ctx.shadowBlur = 12 * _TD.retina;
+						ctx.fill();
+						ctx.shadowBlur = 0;
+						ctx.globalAlpha = 1;
+						ctx.restore();
+					};
+					scene.addElement(effect, 1, 7);
+				}
+				return;
+			}
+
 			var muzzle = this.muzzle || [this.cx, this.cy], // 炮口的位置
 				cx = muzzle[0],
 				cy = muzzle[1];

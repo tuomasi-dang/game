@@ -57,7 +57,7 @@ _TD.a.push(function (TD) {
 			this.btn_pause = new TD.Button("panel-btn-pause", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 260 * _TD.retina,
+				y: this.y + 320 * _TD.retina,
 				text: TD._t("button_pause_text"),
 				//desc: TD._t("button_pause_desc_0"),
 				step_level: this.step_level,
@@ -156,7 +156,7 @@ _TD.a.push(function (TD) {
 				this.x, this.y + 60 * _TD.retina);
 			ctx.fillText(TD._t("panel_monster_title") + this.map.monsters.length,
 				this.x, this.y + 80 * _TD.retina);
-			ctx.fillText(TD._t("wave_info", [this.scene.wave]), this.x, this.y + 210 * _TD.retina);
+			ctx.fillText(TD._t("wave_info", [this.scene.wave]), this.x, this.y + 270 * _TD.retina);
 			ctx.closePath();
 
 			if (this._life_recover_wait) {

@@ -143,7 +143,7 @@ _TD.a.push(function (TD) {
 					y: TD.padding,
 					map: {
 						grid_x: 3,
-						grid_y: 3,
+						grid_y: 4,
 						x: 0,
 						y: 110 * _TD.retina,
 						grids_cfg: [
@@ -153,9 +153,10 @@ _TD.a.push(function (TD) {
 							{ pos: [0, 1], building: "ice_tower" },
 							{ pos: [1, 1], building: "emp_cannon" },
 							{ pos: [2, 1], building: "laser_gun" },
-							{ pos: [0, 2], building: "wall" },
-							{ pos: [1, 2], building: "poison_tower" },
-							{ pos: [2, 2], building: "missile_silo" }
+							{ pos: [0, 2], building: "poison_tower" },
+							{ pos: [1, 2], building: "wall" },
+							{ pos: [2, 2], building: "missile_silo" },
+							{ pos: [0, 3], building: "energy_absorber" }
 						]
 					}
 				},

@@ -119,7 +119,7 @@ _TD.a.push(function (TD) {
                 chain_count: 3, // 连锁数
                 chain_range: 3 // 连锁跳跃最大距离（格）
             },
-			// 毒雾喷射塔
+
             "poison_tower": {
                 damage: 4, // 首次范围伤害
                 range: 4,
@@ -132,7 +132,7 @@ _TD.a.push(function (TD) {
                 poison_damage: 2, // 持续伤害
                 poison_duration: 8 * TD.exp_fps // 持续时间（帧），更久
             },
-			// 导弹发射井
+
             "missile_silo": {
                 damage: 60, // 高伤害
                 range: 10, // 超远距离
@@ -142,6 +142,18 @@ _TD.a.push(function (TD) {
                 life: 100,
                 shield: 200,
                 cost: 2500
+            },
+
+            "energy_absorber": {
+                damage: 8, // 吸收伤害
+                range: 4,
+                max_range: 8,
+                speed: 1.2,
+                bullet_speed: 7,
+                life: 100,
+                shield: 60,
+                cost: 1100,
+                absorb_ratio: 0.5 // 吸收伤害的50%转为金钱
             }
 		};
 

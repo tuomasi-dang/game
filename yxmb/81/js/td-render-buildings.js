@@ -478,6 +478,54 @@ _TD.a.push(function (TD) {
             ctx.lineTo(b.cx + gs2 - 8, b.cy);
             ctx.stroke();
             ctx.restore();
+        },
+        "energy_absorber": function (b, ctx, map, gs, gs2) {
+            // 能量基座
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 4, 0, Math.PI * 2, true);
+            var grad = ctx.createRadialGradient(b.cx, b.cy, gs2 - 16, b.cx, b.cy, gs2 - 4);
+            grad.addColorStop(0, "#223366");
+            grad.addColorStop(1, "#0ff");
+            ctx.fillStyle = grad;
+            ctx.fill();
+            // 发光吸收核心
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 * 0.45, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.shadowColor = "#0ff";
+            ctx.shadowBlur = 16 * _TD.retina;
+            ctx.fillStyle = "#66ffff";
+            ctx.globalAlpha = 0.85;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
+            // 旋转能量环
+            var t = Date.now() / 400;
+            ctx.save();
+            ctx.translate(b.cx, b.cy);
+            ctx.rotate(t % (Math.PI * 2));
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 3 * _TD.retina;
+            ctx.globalAlpha = 0.7;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, gs2 * 0.7, gs2 * 0.35, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            ctx.restore();
+            // 能量吸收符号
+            ctx.save();
+            ctx.strokeStyle = "#0ff";
+            ctx.lineWidth = 2 * _TD.retina;
+            ctx.beginPath();
+            ctx.moveTo(b.cx, b.cy - gs2 * 0.3);
+            ctx.lineTo(b.cx, b.cy + gs2 * 0.3);
+            ctx.moveTo(b.cx - gs2 * 0.18, b.cy + gs2 * 0.1);
+            ctx.lineTo(b.cx, b.cy + gs2 * 0.3);
+            ctx.lineTo(b.cx + gs2 * 0.18, b.cy + gs2 * 0.1);
+            ctx.stroke();
+            ctx.restore();
+            ctx.restore();
         }
 	};
 
