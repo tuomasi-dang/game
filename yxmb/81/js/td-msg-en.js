@@ -36,7 +36,7 @@ _TD.a.push(function (TD) {
 		"building_intro_LMG": "Light Machine Gun: longer range, normal damage ($${0})",
 		"building_intro_HMG": "Heavy Machine Gun: fast shoot, greater damage, normal range ($${0})",
 		"building_intro_laser_gun": "Laser gun: greater damage, 100% hit ($${0})",
-		"building_intro_ice_tower": "Frost Tower deals no damage and slows down by 50% ($${0})",
+		"building_intro_ice_tower": "Frost Tower slows all in range and deals minor damage ($${0})",
 		"click_to_build": "Left click to build ${0} ($${1})",
 		"upgrade": "Upgrade ${0} to level ${1} , cost $${2}。",
 		"sell": "Sell ${0} for $${1}",

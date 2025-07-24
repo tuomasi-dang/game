@@ -219,6 +219,42 @@ _TD.a.push(function (TD) {
 		 * 向自己的目标开火
 		 */
 		fire: function () {
+			if (this.type == "ice_tower") {
+				// 冰霜塔：范围减速和伤害
+				var b = this;
+				var range2 = Math.pow(this.range_px, 2);
+				var now = TD.now || (new Date()).getTime();
+				var affected = false;
+				this.map.eachMonster(function (monster) {
+					if (!monster.is_valid) return;
+					var dx = monster.cx - b.cx;
+					var dy = monster.cy - b.cy;
+					if (dx * dx + dy * dy <= range2) {
+						// 造成伤害
+						monster.beHit(b, b.damage);
+						// 触发冷冻效果
+						var iceAttr = TD.getDefaultBuildingAttributes("ice_tower");
+						monster.is_frozen = true;
+						monster.freeze_duration = iceAttr.freeze_duration;
+						monster.speed = monster.original_speed * iceAttr.freeze_factor;
+						affected = true;
+					}
+				});
+				if (affected) {
+					this.last_freeze_time = now;
+					// 添加波纹特效
+					TD.IceWave("icewave-" + this.id + "-" + now, {
+						cx: this.cx,
+						cy: this.cy,
+						r0: this.range_px * 0.5,
+						r1: this.range_px,
+						time: 0.4,
+						scene: this.grid.scene
+					});
+				}
+				return;
+			}
+
 			if (!this.target || !this.target.is_valid) return;
 
 			if (this.type == "laser_gun") {
@@ -555,6 +591,59 @@ _TD.a.push(function (TD) {
 		bullet._init(cfg);
 
 		return bullet;
+	};
+
+	// 冰霜塔波纹特效对象
+	var ice_wave_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.cx = cfg.cx;
+			this.cy = cfg.cy;
+			this.r0 = cfg.r0 || 0; // 起始半径
+			this.r1 = cfg.r1 || 0; // 终止半径
+			this.r = this.r0;
+			this.color = cfg.color || "rgba(150,200,255,0.3)";
+			this.time = cfg.time || 0.5; // 持续时间（秒）
+			this.wait = this.wait0 = Math.max(1, Math.floor(TD.exp_fps * this.time));
+			this.step_level = cfg.step_level || 1;
+			this.render_level = cfg.render_level || 6;
+			this.scene = cfg.scene;
+			this.is_valid = true;
+			this.is_visiable = true;
+			if (this.scene) this.scene.addElement(this, this.step_level, this.render_level);
+		},
+		step: function() {
+			if (!this.is_valid) return;
+			this.wait--;
+			var p = 1 - this.wait / this.wait0;
+			this.r = this.r0 + (this.r1 - this.r0) * p;
+			if (this.wait <= 0) this.is_valid = false;
+		},
+		render: function() {
+			if (!this.is_visiable) return;
+			var ctx = TD.ctx;
+			var alpha = Math.max(0, 0.3 * this.wait / this.wait0);
+			ctx.save();
+			ctx.strokeStyle = "rgba(150,200,255," + alpha + ")";
+			ctx.lineWidth = 4 * _TD.retina;
+			ctx.beginPath();
+			ctx.arc(this.cx, this.cy, this.r, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.stroke();
+			ctx.restore();
+		}
+	};
+
+	/**
+	 * 创建冰霜塔波纹特效
+	 * @param id {String}
+	 * @param cfg {Object} 需包含 cx, cy, r0, r1, scene
+	 */
+	TD.IceWave = function(id, cfg) {
+		var wave = new TD.Element(id, cfg);
+		TD.lang.mix(wave, ice_wave_obj);
+		wave._init(cfg);
+		return wave;
 	};
 
 }); // _TD.a.push end
