@@ -10,13 +10,44 @@
 <body id="tower-defense">
 <div id="wrapper">
 	<div id="td-wrapper">
-		<h1>HTML5 塔防游戏</h1>
+		<h1>《无敌塔防》</h1>
 
 		<div id="td-loading">加载中...</div>
 		<div id="td-board">
 			<canvas id="td-canvas">抱歉，您的浏览器不支持 HTML 5 Canvas 标签，请使用 IE9 / Chrome / Opera 等浏览器浏览本页以获得最佳效果。</canvas>
 		</div>
 	</div>
+</div>
+
+<!-- 迭代日志面板（时间线风格） -->
+<style>
+#changelog-panel { position:fixed;right:18px;bottom:18px;width:300px;max-height:260px;z-index:9999;background:rgba(30,40,60,0.97);color:#fff;border-radius:10px;box-shadow:0 2px 12px #000a;padding:14px 14px 10px 14px;overflow-y:auto;font-size:13px;line-height:1.6;backdrop-filter:blur(2px); }
+#changelog-panel .changelog-title { font-weight:bold;font-size:16px;margin-bottom:7px;letter-spacing:0.5px; }
+#changelog-timeline { position:relative;margin:0 0 0 20px;padding:0; }
+#changelog-timeline li { list-style:none;position:relative;margin-bottom:13px;padding-left:13px; }
+#changelog-timeline li:last-child { margin-bottom:0; }
+#changelog-timeline .dot { position:absolute;left:-20px;top:4px;width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#0ff,#39f 60%,#fff 100%);box-shadow:0 0 4px #0ffb; border:1.5px solid #fff; }
+#changelog-timeline .ver { font-weight:bold;color:#0ff;font-size:12px;margin-right:5px;letter-spacing:0.2px; }
+#changelog-timeline .date { color:#aaa;font-size:11px;margin-left:2px; }
+#changelog-timeline .desc { margin-top:1px;font-size:12px; }
+#changelog-timeline:before { content:'';position:absolute;left:-14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#0ff,#39f 80%,#fff 100%);border-radius:1px; }
+#changelog-panel .close-btn { position:absolute;top:7px;right:10px;cursor:pointer;font-size:15px;opacity:0.7;transition:opacity 0.2s; }
+#changelog-panel .close-btn:hover { opacity:1; }
+</style>
+<div id="changelog-panel">
+  <div class="changelog-title">迭代日志</div>
+  <ul id="changelog-timeline">
+    <li><span class="dot"></span><span class="ver">v1.0</span><span class="date">2023-02-10</span><div class="desc">塔防第一版预提交</div></li>
+    <li><span class="dot"></span><span class="ver">v2.0</span><span class="date">2023-03-09</span><div class="desc">新增冰霜塔-修复冰霜特效</div></li>
+    <li><span class="dot"></span><span class="ver">v2.1</span><span class="date">2023-06-08</span><div class="desc">新增EMP炮-优化链接敌人光线特效</div></li>
+    <li><span class="dot"></span><span class="ver">v2.2</span><span class="date">2024-07-23</span><div class="desc">新增毒雾喷射塔-持续掉血</div></li>
+    <li><span class="dot"></span><span class="ver">v2.3</span><span class="date">2024-11-11</span><div class="desc">新增导弹发射井</div></li>
+    <li><span class="dot"></span><span class="ver">v2.3.1</span><span class="date">2025-02-23</span><div class="desc">优化导弹发射井的攻击范围和粒子特效</div></li>
+    <li><span class="dot"></span><span class="ver">v2.3.2</span><span class="date">2025-02-29</span><div class="desc">修复高频爆炸导致页面卡死问题</div></li>
+    <li><span class="dot"></span><span class="ver">v2.4</span><span class="date">2025-07-20</span><div class="desc">新增能量吸收塔-转化金币</div></li>
+    <li><span class="dot"></span><span class="ver">v2.4.1</span><span class="date">2025-07-24</span><div class="desc">优化所有塔的UI和特效表现</div></li>
+  </ul>
+  <div class="close-btn" onclick="document.getElementById('changelog-panel').style.display='none'">×</div>
 </div>
 
 <script type="text/javascript" src="js/td.js"></script>

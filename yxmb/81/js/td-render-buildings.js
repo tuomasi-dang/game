@@ -384,13 +384,6 @@ _TD.a.push(function (TD) {
             ctx.strokeStyle = "#0f0";
             ctx.lineWidth = 2 * _TD.retina;
             ctx.stroke();
-            // 毒液符号
-            ctx.strokeStyle = "#8f0";
-            ctx.lineWidth = 2 * _TD.retina;
-            ctx.beginPath();
-            ctx.moveTo(b.cx - 4 * _TD.retina, b.cy);
-            ctx.bezierCurveTo(b.cx, b.cy + 8 * _TD.retina, b.cx, b.cy - 8 * _TD.retina, b.cx + 4 * _TD.retina, b.cy);
-            ctx.stroke();
             ctx.restore();
             // 喷口（粗，带毒液滴）
             ctx.lineWidth = 8 * _TD.retina;
@@ -440,36 +433,67 @@ _TD.a.push(function (TD) {
         },
         "missile_silo": function (b, ctx, map, gs, gs2) {
             var target_position = b.getTargetPosition();
-            // 井口
             ctx.save();
-            ctx.fillStyle = "#222";
-            ctx.strokeStyle = "#000";
+            // 井口底座
             ctx.beginPath();
             ctx.arc(b.cx, b.cy, gs2 - 4, 0, Math.PI * 2, true);
-            ctx.closePath();
+            var grad = ctx.createRadialGradient(b.cx, b.cy, gs2 - 18, b.cx, b.cy, gs2 - 4);
+            grad.addColorStop(0, "#222");
+            grad.addColorStop(1, "#444");
+            ctx.fillStyle = grad;
             ctx.fill();
+            ctx.strokeStyle = "#000";
+            ctx.lineWidth = 2 * _TD.retina;
             ctx.stroke();
-            // 红色警示圈
-            ctx.strokeStyle = "#f44";
-            ctx.lineWidth = 3 * _TD.retina;
+            // 金属井盖
+            ctx.save();
             ctx.beginPath();
-            ctx.arc(b.cx, b.cy, gs2 - 8, 0, Math.PI * 2, true);
+            ctx.arc(b.cx, b.cy, gs2 - 10, 0, Math.PI * 2, true);
             ctx.closePath();
-            ctx.setLineDash([6, 6]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            // 导弹（静态）
-            ctx.fillStyle = "#fff";
+            ctx.fillStyle = "#888";
+            ctx.globalAlpha = 0.7;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.restore();
+            // 红色警示灯
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy - gs2 * 0.7, 5 * _TD.retina, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fillStyle = "#f44";
+            ctx.shadowColor = "#f44";
+            ctx.shadowBlur = 10 * _TD.retina;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.restore();
+            // 导弹弹头
+            ctx.save();
             ctx.beginPath();
             ctx.ellipse(b.cx, b.cy, 7 * _TD.retina, 16 * _TD.retina, 0, 0, Math.PI * 2);
             ctx.closePath();
+            ctx.fillStyle = "#fff";
+            ctx.shadowColor = "#fff";
+            ctx.shadowBlur = 8 * _TD.retina;
             ctx.fill();
+            ctx.shadowBlur = 0;
             ctx.strokeStyle = "#888";
             ctx.lineWidth = 2 * _TD.retina;
             ctx.beginPath();
             ctx.moveTo(b.cx, b.cy + 16 * _TD.retina);
             ctx.lineTo(b.cx, b.cy + 22 * _TD.retina);
             ctx.stroke();
+            ctx.restore();
+            // 动态井口高光
+            var t = Date.now() / 600;
+            ctx.save();
+            ctx.translate(b.cx, b.cy);
+            ctx.rotate(t % (Math.PI * 2));
+            ctx.strokeStyle = "rgba(255,255,255,0.18)";
+            ctx.lineWidth = 7 * _TD.retina;
+            ctx.beginPath();
+            ctx.arc(0, 0, gs2 - 7, Math.PI * 0.1, Math.PI * 0.45, false);
+            ctx.stroke();
+            ctx.restore();
             // 井盖分割线
             ctx.strokeStyle = "#444";
             ctx.lineWidth = 1.5 * _TD.retina;
