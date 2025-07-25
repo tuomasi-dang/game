@@ -219,6 +219,31 @@ _TD.a.push(function (TD) {
 		 * 向自己的目标开火
 		 */
 		fire: function () {
+			if (this.type == "summon_tower") {
+				var attr = TD.getDefaultBuildingAttributes("summon_tower");
+				this._minions = this._minions || [];
+				// 清理无效小兵
+				this._minions = this._minions.filter(function(m){ return m && m.is_valid; });
+				if (this._minions.length >= attr.summon_count) return;
+				// 召唤间隔控制
+				var now = TD.now || (new Date()).getTime();
+				if (!this._last_summon_time) this._last_summon_time = 0;
+				if (now - this._last_summon_time < (attr.summon_interval * 1000 / ((typeof TD.exp_fps === 'number' && TD.exp_fps > 0) ? TD.exp_fps : 24))) return;
+				this._last_summon_time = now;
+				// 召唤小兵
+				var minion = new TD.Minion(null, {
+					x: this.cx,
+					y: this.cy,
+					map: this.map,
+					scene: this.grid.scene,
+					color: "#8cf",
+					step_level: 1,
+					render_level: 6
+				});
+				this._minions.push(minion);
+				return;
+			}
+
 			if (this.type == "missile_silo") {
 				if (!this.target || !this.target.is_valid) return;
 				var muzzle = this.muzzle || [this.cx, this.cy];
@@ -1238,6 +1263,107 @@ _TD.a.push(function (TD) {
 		TD.lang.mix(bullet, missile_bullet_obj);
 		bullet._init(cfg);
 		return bullet;
+	};
+
+	// 小兵对象
+	var minion_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.cx = cfg.x;
+			this.cy = cfg.y;
+			this.r = Math.abs(10 * _TD.retina); // 保证正数
+			this.color = cfg.color || "#8cf";
+			this.map = cfg.map;
+			this.scene = cfg.scene;
+			this.is_valid = true;
+			this.is_visiable = true;
+			this.life = 30;
+			this.speed = 4.0; // 小兵速度
+			this.target = null;
+			this.step_level = cfg.step_level || 1;
+			this.render_level = cfg.render_level || 6;
+			var exp_fps = (typeof TD.exp_fps === 'number' && TD.exp_fps > 0) ? TD.exp_fps : 24;
+			this.life_time = exp_fps * 10; // 10秒后消失
+			this.addToScene(this.scene, this.step_level, this.render_level);
+		},
+		findTarget: function() {
+			var self = this;
+			var minDist = 99999, target = null;
+			this.map.eachMonster(function(m) {
+				if (!m.is_valid) return;
+				var dx = m.cx - self.cx, dy = m.cy - self.cy;
+				var dist = dx*dx + dy*dy;
+				if (dist < minDist) { minDist = dist; target = m; }
+			});
+			this.target = target;
+		},
+		step: function() {
+			if (!this.is_valid) return;
+			if (this.life <= 0) { this.is_valid = false; return; }
+			this.life_time--;
+			if (this.life_time <= 0) { this.is_valid = false; return; }
+			this.findTarget();
+			if (this.target && this.target.is_valid) {
+				var dx = this.target.cx - this.cx, dy = this.target.cy - this.cy;
+				var dist = Math.sqrt(dx*dx + dy*dy);
+				if (dist < 18 * _TD.retina) {
+					// 造成怪物剩余血量的30%伤害
+					var dmg = Math.floor(this.target.life * 0.3);
+					if (dmg > 0) this.target.beHit(this, dmg);
+					this.is_valid = false; // 小兵立即死亡
+				} else {
+					var spd = this.speed * TD.global_speed;
+					this.cx += dx/dist * spd;
+					this.cy += dy/dist * spd;
+				}
+			}
+		},
+		render: function() {
+			if (!this.is_visiable) return;
+			var ctx = TD.ctx;
+			ctx.save();
+			// 头
+			var headR = Math.max(2, Math.abs(this.r * 0.38));
+			ctx.beginPath();
+			ctx.arc(this.cx, this.cy - this.r*0.5, headR, 0, Math.PI*2, true);
+			ctx.closePath();
+			ctx.fillStyle = "#fff";
+			ctx.shadowColor = this.color;
+			ctx.shadowBlur = 8 * _TD.retina;
+			ctx.globalAlpha = 0.95;
+			ctx.fill();
+			ctx.shadowBlur = 0;
+			ctx.globalAlpha = 1;
+			// 身体
+			ctx.strokeStyle = this.color;
+			ctx.lineWidth = 3*_TD.retina;
+			ctx.beginPath();
+			ctx.moveTo(this.cx, this.cy - this.r*0.12);
+			ctx.lineTo(this.cx, this.cy + this.r*0.55);
+			ctx.stroke();
+			// 手
+			ctx.lineWidth = 2*_TD.retina;
+			ctx.beginPath();
+			ctx.moveTo(this.cx, this.cy + this.r*0.05);
+			ctx.lineTo(this.cx - this.r*0.38, this.cy + this.r*0.28);
+			ctx.moveTo(this.cx, this.cy + this.r*0.05);
+			ctx.lineTo(this.cx + this.r*0.38, this.cy + this.r*0.28);
+			ctx.stroke();
+			// 腿
+			ctx.beginPath();
+			ctx.moveTo(this.cx, this.cy + this.r*0.55);
+			ctx.lineTo(this.cx - this.r*0.28, this.cy + this.r*0.95);
+			ctx.moveTo(this.cx, this.cy + this.r*0.55);
+			ctx.lineTo(this.cx + this.r*0.28, this.cy + this.r*0.95);
+			ctx.stroke();
+			ctx.restore();
+		}
+	};
+	TD.Minion = function(id, cfg) {
+		var minion = new TD.Element(id, cfg);
+		TD.lang.mix(minion, minion_obj);
+		minion._init(cfg);
+		return minion;
 	};
 
 }); // _TD.a.push end

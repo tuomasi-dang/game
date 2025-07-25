@@ -33,6 +33,8 @@ _TD.a.push(function (TD) {
 		"building_name_poison_tower": "毒雾喷射塔",
 		"building_name_missile_silo": "导弹发射井",
 		"building_name_energy_absorber": "能量吸收塔",
+		"building_name_summon_tower": "召唤塔",
+		"building_intro_summon_tower": "召唤塔 召唤小兵协助防守，自动攻击一段时间后消失，可持续召唤 ($${0})",
 		"building_info": "${0}: 等级 ${1}，攻击 ${2}，速度 ${3}，射程 ${4}，战绩 ${5}",
 		"building_info_wall": "${0}",
 		"building_intro_wall": "路障 可以阻止怪物通过 ($${0})",

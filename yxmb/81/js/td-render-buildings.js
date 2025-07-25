@@ -550,6 +550,65 @@ _TD.a.push(function (TD) {
             ctx.stroke();
             ctx.restore();
             ctx.restore();
+        },
+        "summon_tower": function (b, ctx, map, gs, gs2) {
+            // 魔法阵底座
+            ctx.save();
+            var grad = ctx.createRadialGradient(b.cx, b.cy, gs2 * 0.2, b.cx, b.cy, gs2 - 2);
+            grad.addColorStop(0, "#fff6");
+            grad.addColorStop(0.5, "#a0f");
+            grad.addColorStop(1, "#313");
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 - 2, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.shadowColor = "#a0f";
+            ctx.shadowBlur = 12 * _TD.retina;
+            ctx.globalAlpha = 0.92;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+            // 魔法阵符文
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2 * _TD.retina;
+            for (var i = 0; i < 6; i++) {
+                var angle = Math.PI * 2 * i / 6;
+                ctx.beginPath();
+                ctx.arc(b.cx + Math.cos(angle) * (gs2 * 0.7), b.cy + Math.sin(angle) * (gs2 * 0.7), 4 * _TD.retina, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            // 传送门拱门
+            ctx.strokeStyle = "#a0f";
+            ctx.lineWidth = 5 * _TD.retina;
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy, gs2 * 0.7, Math.PI * 0.2, Math.PI * 0.8, false);
+            ctx.stroke();
+            // 旋转能量球
+            var t = Date.now() / 500;
+            ctx.save();
+            ctx.translate(b.cx, b.cy - gs2 * 0.3);
+            ctx.rotate(t % (Math.PI * 2));
+            ctx.beginPath();
+            ctx.arc(0, 0, gs2 * 0.22, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fillStyle = "#fff";
+            ctx.shadowColor = "#a0f";
+            ctx.shadowBlur = 16 * _TD.retina;
+            ctx.globalAlpha = 0.85;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+            ctx.restore();
+            // 顶部魔法水晶
+            ctx.beginPath();
+            ctx.arc(b.cx, b.cy - gs2 * 0.7, gs2 * 0.13, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fillStyle = "#a0f";
+            ctx.shadowColor = "#fff";
+            ctx.shadowBlur = 8 * _TD.retina;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.restore();
         }
 	};
 

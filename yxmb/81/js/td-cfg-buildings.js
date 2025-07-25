@@ -154,6 +154,20 @@ _TD.a.push(function (TD) {
                 shield: 60,
                 cost: 1100,
                 absorb_ratio: 0.5 // 吸收伤害的50%转为金钱
+            },
+
+            // 召唤塔
+            "summon_tower": {
+                damage: 0, // 召唤塔本身不攻击
+                range: 4,
+                max_range: 8,
+                speed: 0.7, // 召唤间隔
+                bullet_speed: 0,
+                life: 100,
+                shield: 60,
+                cost: 1300,
+                summon_count: 2, // 同时最多存在小兵数
+                summon_interval: 4 * TD.exp_fps // 召唤间隔（帧）
             }
 		};
 
