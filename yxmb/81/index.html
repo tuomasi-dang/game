@@ -46,9 +46,73 @@
     <li><span class="dot"></span><span class="ver">v2.3.2</span><span class="date">2025-02-29</span><div class="desc">修复高频爆炸导致页面卡死问题</div></li>
     <li><span class="dot"></span><span class="ver">v2.4</span><span class="date">2025-07-20</span><div class="desc">新增能量吸收塔-转化金币</div></li>
     <li><span class="dot"></span><span class="ver">v2.4.1</span><span class="date">2025-07-24</span><div class="desc">优化所有塔的UI和特效表现</div></li>
+    <li><span class="dot"></span><span class="ver">v2.4.2</span><span class="date">2025-07-24</span><div class="desc">新增反馈功能</div></li>
   </ul>
   <div class="close-btn" onclick="document.getElementById('changelog-panel').style.display='none'">×</div>
 </div>
+
+<!-- 反馈按钮和弹窗 -->
+<style>
+    #feedback-btn {
+        position: fixed; right: 18px; bottom: 370px; z-index: 10001;
+        background: linear-gradient(135deg,#0ff,#39f 80%);
+        color: #fff; border: none; border-radius: 22px;
+        box-shadow: 0 2px 10px #0005;
+        font-size: 15px; font-weight: bold; letter-spacing: 1px;
+        padding: 10px 26px; cursor: pointer; transition: background 0.2s,box-shadow 0.2s;
+    }
+#feedback-btn:hover { background: linear-gradient(135deg,#39f,#0ff 80%); box-shadow:0 4px 18px #0ff6; }
+#feedback-modal-bg {
+  display:none; position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10002;background:rgba(0,0,0,0.25);}
+#feedback-modal {
+  display:none; position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10003;
+  background:rgba(255,255,255,0.98);border-radius:12px;box-shadow:0 4px 32px #000a;
+  min-width:320px;max-width:90vw;width:370px;padding:28px 28px 18px 28px;
+}
+#feedback-modal h2 {margin:0 0 12px 0;font-size:20px;color:#222;letter-spacing:1px;}
+#feedback-modal textarea {
+  width:100%;min-height:80px;max-height:180px;resize:vertical;border-radius:7px;border:1.5px solid #0cf;padding:8px;font-size:15px;line-height:1.6;margin-bottom:14px;box-sizing:border-box;}
+#feedback-modal input[type=email] {
+  width:100%;border-radius:7px;border:1.5px solid #0cf;padding:7px;font-size:15px;margin-bottom:14px;box-sizing:border-box;}
+#feedback-modal .modal-actions {display:flex;justify-content:flex-end;gap:12px;}
+#feedback-modal button {
+  background:linear-gradient(135deg,#0ff,#39f 80%);color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s;}
+#feedback-modal button:hover {background:linear-gradient(135deg,#39f,#0ff 80%);}
+#feedback-modal .close-x {position:absolute;top:10px;right:16px;font-size:20px;color:#888;cursor:pointer;}
+#feedback-modal .close-x:hover {color:#0cf;}
+#feedback-modal .tip {font-size:13px;color:#888;margin-bottom:8px;}
+</style>
+<button id="feedback-btn" onclick="document.getElementById('feedback-modal-bg').style.display='block';document.getElementById('feedback-modal').style.display='block';">反馈</button>
+<div id="feedback-modal-bg" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';"></div>
+<div id="feedback-modal">
+  <span class="close-x" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';">×</span>
+  <h2>意见反馈</h2>
+  <div class="tip">欢迎提出建议、遇到的问题或新功能需求，我们会持续优化体验！</div>
+  <form id="feedback-form" onsubmit="return sendFeedback(event)">
+    <textarea name="content" required placeholder="请填写您的反馈内容（必填）"></textarea>
+    <input type="email" name="email" placeholder="您的邮箱（可选，便于联系）" />
+    <div class="modal-actions">
+      <button type="button" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';">取消</button>
+      <button type="submit">发送</button>
+    </div>
+  </form>
+</div>
+<script>
+function sendFeedback(e) {
+  e.preventDefault();
+  var form = document.getElementById('feedback-form');
+  var content = form.content.value.trim();
+  var email = form.email.value.trim();
+  if (!content) { alert('请填写反馈内容！'); return false; }
+  var mailto = 'mailto:tuomasi360@foxmail.com?subject=' + encodeURIComponent('无敌塔防-用户反馈') +
+    '&body=' + encodeURIComponent(content + (email ? ('\n\n联系方式: ' + email) : ''));
+  window.open(mailto);
+  document.getElementById('feedback-modal-bg').style.display='none';
+  document.getElementById('feedback-modal').style.display='none';
+  setTimeout(function(){ alert('感谢您的反馈！'); }, 300);
+  return false;
+}
+</script>
 
 <script type="text/javascript" src="js/td.js"></script>
 <script type="text/javascript" src="js/td-lang.js"></script>
