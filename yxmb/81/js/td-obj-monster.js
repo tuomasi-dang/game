@@ -429,6 +429,29 @@ _TD.a.push(function (TD) {
 		return explode;
 	};
 
+	// TD.Explode 优化：限制爆炸特效数量
+	var MAX_EXPLODE_COUNT = 30;
+	TD._explode_count = 0;
+	var old_Explode = TD.Explode;
+	TD.Explode = function(id, cfg) {
+		TD._explode_count = TD._explode_count || 0;
+		// 限制同一时刻爆炸特效数量
+		if (TD._explode_count >= MAX_EXPLODE_COUNT) return null;
+		// 缩短持续时间，减小半径
+		cfg = cfg || {};
+		cfg.time = Math.min(cfg.time || 0.25, 0.25);
+		cfg.r = Math.max(1, (cfg.r || 10) * 0.8);
+		var exp = old_Explode(id, cfg);
+		TD._explode_count++;
+		// 自动减少计数
+		var old_step = exp.step;
+		exp.step = function() {
+			old_step.call(this);
+			if (!this.is_valid && TD._explode_count > 0) TD._explode_count--;
+		};
+		return exp;
+	};
+
 }); // _TD.a.push end
 
 
