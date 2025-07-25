@@ -1283,7 +1283,7 @@ _TD.a.push(function (TD) {
 			this.step_level = cfg.step_level || 1;
 			this.render_level = cfg.render_level || 6;
 			var exp_fps = (typeof TD.exp_fps === 'number' && TD.exp_fps > 0) ? TD.exp_fps : 24;
-			this.life_time = exp_fps * 10; // 10秒后消失
+			this.life_time = exp_fps * 20; // 20秒后消失
 			this.addToScene(this.scene, this.step_level, this.render_level);
 		},
 		findTarget: function() {
