@@ -57,7 +57,7 @@ _TD.a.push(function (TD) {
 			this.btn_pause = new TD.Button("panel-btn-pause", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 320 * _TD.retina,
+				y: this.y + 400 * _TD.retina,
 				text: TD._t("button_pause_text"),
 				//desc: TD._t("button_pause_desc_0"),
 				step_level: this.step_level,
@@ -104,7 +104,7 @@ _TD.a.push(function (TD) {
 			this.btn_upgrade = new TD.Button("panel-btn-upgrade", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 300 * _TD.retina,
+				y: this.y + 320 * _TD.retina,
 				is_visiable: false,
 				text: TD._t("button_upgrade_text"),
 				step_level: this.step_level,
@@ -117,7 +117,7 @@ _TD.a.push(function (TD) {
 			this.btn_sell = new TD.Button("panel-btn-sell", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 340 * _TD.retina,
+				y: this.y + 360 * _TD.retina,
 				is_visiable: false,
 				text: TD._t("button_sell_text"),
 				step_level: this.step_level,
