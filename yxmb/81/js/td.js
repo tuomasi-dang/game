@@ -83,6 +83,17 @@ var _TD = {
 
 				this.is_paused = false;
 				this.stage.start();
+				
+				// 创建冰霜破坏者怪兽 - 固定在左下角
+				if (this.stage.current_act && this.stage.current_act.current_scene && this.stage.current_act.current_scene.map) {
+					new TD.FrostDestroyer("frost-destroyer", {
+						scene: this.stage.current_act.current_scene,
+						map: this.stage.current_act.current_scene.map,
+						cx: 50,
+						cy: 550
+					});
+				}
+				
 				this.step();
 
 				return this;
@@ -209,7 +220,7 @@ var _TD = {
 			 * @param txt
 			 */
 			log: function (txt) {
-				this.is_debug && window.console && console.log && console.log(txt);
+				this.is_debug && window.console && console && console.log && console.log(txt);
 			},
 
 			/**

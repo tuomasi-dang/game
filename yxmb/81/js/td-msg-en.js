@@ -46,7 +46,7 @@ _TD.a.push(function (TD) {
 		"building_intro_poison_tower": "Poison Tower: area damage and poison over time ($${0})",
 		"building_intro_missile_silo": "Missile Silo: ultra-long range, high damage, slow attack speed ($${0})",
 		"building_intro_energy_absorber": "Energy Absorber: steals enemy HP and converts to money ($${0})",
-		"building_intro_summon_tower": "Summon Tower: summons minions to assist in defense. Minions are humanoid, auto-attack enemies, disappear after 10s, and can be resummoned. ($${0})",
+		"building_intro_summon_tower": "Summon Tower: Summons minions to assist in defense. Minions attack the nearest enemy and deal 30% of current HP as damage.",
 		"click_to_build": "Left click to build ${0} ($${1})",
 		"upgrade": "Upgrade ${0} to level ${1} , cost $${2}。",
 		"sell": "Sell ${0} for $${1}",
@@ -63,7 +63,15 @@ _TD.a.push(function (TD) {
 		"blocked": "Can't build here, it will block the way from entrance to exit!",
 		"monster_be_blocked": "Can't build here, some monster will be blocked!",
 		"entrance_or_exit_be_blocked": "Can't build on the entrance or the exit!",
-		"_": "ERROR"
+		"_": "ERROR",
+
+	// Frost Destroyer related messages
+	"frost_destroyer_warning": "Warning: Frost Destroyer has appeared in the bottom left! It will periodically freeze or disappear your defense towers!",
+	"tower_frozen": "Tower frozen!",
+	"tower_disappeared": "Tower disappeared!",
+	"tower_recovered": "Tower recovered!",
+	"tower_permanently_destroyed": "Tower permanently destroyed!",
+	"disappear_with_permanent": "Disappear skill - includes permanent destruction!"
 	};
 
 	TD._t = TD.translate = function (k, args) {

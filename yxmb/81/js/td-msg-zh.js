@@ -34,7 +34,7 @@ _TD.a.push(function (TD) {
 		"building_name_missile_silo": "导弹发射井",
 		"building_name_energy_absorber": "能量吸收塔",
 		"building_name_summon_tower": "召唤塔",
-		"building_intro_summon_tower": "召唤塔 召唤小兵协助防守，自动攻击一段时间后消失，可持续召唤 ($${0})",
+		"building_intro_summon_tower": "召唤塔：召唤小兵协助防守，小兵会攻击最近的敌人并造成30%当前生命值伤害。",
 		"building_info": "${0}: 等级 ${1}，攻击 ${2}，速度 ${3}，射程 ${4}，战绩 ${5}",
 		"building_info_wall": "${0}",
 		"building_intro_wall": "路障 可以阻止怪物通过 ($${0})",
@@ -63,7 +63,15 @@ _TD.a.push(function (TD) {
 		"blocked": "不能在这儿修建建筑，起点与终点之间至少要有一条路可到达！",
 		"monster_be_blocked": "不能在这儿修建建筑，有怪物被围起来了！",
 		"entrance_or_exit_be_blocked": "不能在起点或终点处修建建筑！",
-		"_": "ERROR"
+		"_": "ERROR",
+
+	// 冰霜破坏者相关提示
+	"frost_destroyer_warning": "警告：冰霜破坏者出现在左下角！它会不定时冻结或消失你的防御塔！",
+	"tower_frozen": "防御塔被冻结！",
+	"tower_disappeared": "防御塔消失了！",
+	"tower_recovered": "防御塔恢复正常！",
+	"tower_permanently_destroyed": "防御塔被永久摧毁！",
+	"disappear_with_permanent": "消失技能 - 包含永久摧毁！"
 	};
 
 	TD._t = TD.translate = function (k, args) {

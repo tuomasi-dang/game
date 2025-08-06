@@ -186,6 +186,9 @@ _TD.a.push(function (TD) {
 		 */
 		findTaget: function () {
 			if (!this.is_weapon || this.is_pre_building || !this.grid) return;
+			
+			// 被冻结或消失的塔不寻找目标
+			if (this.is_frozen || this.is_visiable === false) return;
 
 			var cx = this.cx, cy = this.cy,
 				range2 = Math.pow(this.range_px, 2);
@@ -500,6 +503,12 @@ _TD.a.push(function (TD) {
 		tryToFire: function () {
 			if (!this.is_weapon || !this.target)
 				return;
+			
+			// 被冻结的塔无法攻击
+			if (this.is_frozen) return;
+			
+			// 被消失的塔无法攻击，也不进行冷却
+			if (this.is_visiable === false) return;
 
 			this._fire_wait--;
 			if (this._fire_wait > 0) {
@@ -618,6 +627,15 @@ _TD.a.push(function (TD) {
 
 			var ctx = TD.ctx;
 
+			// 被消失的塔不渲染
+			if (this.is_visiable === false) return;
+			
+			// 被冻结的塔有特殊效果
+			if (this.is_frozen) {
+				ctx.save();
+				ctx.globalAlpha = 0.6;
+			}
+
 			TD.renderBuilding(this);
 
 			if (
@@ -654,6 +672,11 @@ _TD.a.push(function (TD) {
 				ctx.lineTo(this.cx, this.cy);
 				ctx.closePath();
 				ctx.stroke();
+			}
+			
+			// 被冻结的塔恢复透明度
+			if (this.is_frozen) {
+				ctx.restore();
 			}
 		},
 
@@ -1364,6 +1387,458 @@ _TD.a.push(function (TD) {
 		TD.lang.mix(minion, minion_obj);
 		minion._init(cfg);
 		return minion;
+	};
+
+	// 冰霜破坏者怪兽对象 - 固定在左下角，不定时冻结或消失防御塔
+	var frost_destroyer_obj = {
+		_init: function(cfg) {
+			cfg = cfg || {};
+			this.cx = cfg.cx || 50; // 固定在左下角
+			this.cy = cfg.cy || 550;
+			this.r = 25;
+			this.is_valid = true;
+			this.is_visiable = true;
+			this.scene = cfg.scene;
+			this.map = cfg.map;
+			this.life = 9999; // 几乎不死
+			this.max_life = 9999;
+			this.speed = 0; // 不移动
+			this.step_level = cfg.step_level || 1;
+			this.render_level = cfg.render_level || 8;
+			
+			// 技能相关
+			this.skill_interval = 8 * TD.exp_fps; // 8秒间隔
+			this.skill_cooldown = this.skill_interval; // 一开始就有冷却时间
+			this.freeze_duration = 3 * TD.exp_fps; // 冻结3秒
+			this.disappear_duration = 2 * TD.exp_fps; // 消失2秒
+			this.frozen_towers = []; // 被冻结的塔
+			this.disappeared_towers = []; // 被消失的塔
+			
+			if (this.scene) this.scene.addElement(this, this.step_level, this.render_level);
+			
+			// 显示警告提示
+			if (this.scene && this.scene.panel && this.scene.panel.balloontip) {
+				setTimeout(function() {
+					this.scene.panel.balloontip.msg(TD._t("frost_destroyer_warning"), null);
+				}.bind(this), 2000); // 2秒后显示警告
+			}
+		},
+		
+		step: function() {
+			if (!this.is_valid) return;
+			
+			// 技能冷却
+			this.skill_cooldown--;
+			if (this.skill_cooldown <= 0) {
+				this.castSkill();
+				this.skill_cooldown = this.skill_interval;
+			}
+			
+			// 处理被冻结的塔
+			for (var i = this.frozen_towers.length - 1; i >= 0; i--) {
+				var tower = this.frozen_towers[i];
+				if (tower && tower.is_valid) {
+					tower.freeze_duration--;
+					if (tower.freeze_duration <= 0) {
+						// 解冻
+						tower.is_frozen = false;
+						tower.speed = tower.original_speed || tower.speed;
+						tower.target = null; // 重置目标，重新寻找
+						this.frozen_towers.splice(i, 1);
+						
+						// 显示恢复提示
+						if (this.scene && this.scene.panel && this.scene.panel.balloontip) {
+							this.scene.panel.balloontip.msg(TD._t("tower_recovered"), null);
+						}
+					}
+				} else {
+					this.frozen_towers.splice(i, 1);
+				}
+			}
+			
+			// 处理被消失的塔
+			for (var j = this.disappeared_towers.length - 1; j >= 0; j--) {
+				var tower = this.disappeared_towers[j];
+				if (tower && tower.is_valid) {
+					tower.disappear_duration--;
+					if (tower.disappear_duration <= 0) {
+						// 重新出现
+						tower.is_visiable = true;
+						tower.target = null; // 重置目标，重新寻找
+						this.disappeared_towers.splice(j, 1);
+						
+						// 显示恢复提示
+						if (this.scene && this.scene.panel && this.scene.panel.balloontip) {
+							this.scene.panel.balloontip.msg(TD._t("tower_recovered"), null);
+						}
+					}
+				} else {
+					this.disappeared_towers.splice(j, 1);
+				}
+			}
+		},
+		
+		castSkill: function() {
+			if (!this.map) return;
+			
+			var skill_type = Math.random() < 0.6 ? 'freeze' : 'disappear';
+			var affected_towers = [];
+			
+			// 收集所有防御塔
+			this.map.eachBuilding(function(building) {
+				if (building.is_valid && building.is_weapon && !building.is_frozen && building.is_visiable) {
+					affected_towers.push(building);
+				}
+			});
+			
+			if (affected_towers.length === 0) return;
+			
+			// 随机选择1-3个塔
+			var count = Math.min(affected_towers.length, Math.floor(Math.random() * 3) + 1);
+			var selected_towers = [];
+			
+			for (var i = 0; i < count; i++) {
+				var idx = Math.floor(Math.random() * affected_towers.length);
+				selected_towers.push(affected_towers[idx]);
+				affected_towers.splice(idx, 1);
+			}
+			
+			// 施放技能
+			var has_permanent = false;
+			if (skill_type === 'freeze') {
+				this.freezeTowers(selected_towers);
+			} else {
+				// 检查是否有永久摧毁的情况
+				for (var i = 0; i < selected_towers.length; i++) {
+					if (Math.random() < 0.1) {
+						has_permanent = true;
+						break;
+					}
+				}
+				this.disappearTowers(selected_towers);
+			}
+			
+			// 技能特效
+			this.createSkillEffect(skill_type);
+			
+			// 显示技能提示
+			if (this.scene && this.scene.panel && this.scene.panel.balloontip) {
+				var skill_msg;
+				if (skill_type === 'freeze') {
+					skill_msg = TD._t("tower_frozen");
+				} else if (has_permanent) {
+					skill_msg = TD._t("disappear_with_permanent");
+				} else {
+					skill_msg = TD._t("tower_disappeared");
+				}
+				this.scene.panel.balloontip.msg(skill_msg, null);
+			}
+		},
+		
+		freezeTowers: function(towers) {
+			for (var i = 0; i < towers.length; i++) {
+				var tower = towers[i];
+				if (tower && tower.is_valid) {
+					tower.is_frozen = true;
+					tower.original_speed = tower.speed;
+					tower.speed = 0; // 完全停止攻击
+					tower.freeze_duration = this.freeze_duration;
+					this.frozen_towers.push(tower);
+					
+					// 冻结特效
+					this.createFreezeEffect(tower);
+				}
+			}
+		},
+		
+		disappearTowers: function(towers) {
+			for (var i = 0; i < towers.length; i++) {
+				var tower = towers[i];
+				if (tower && tower.is_valid) {
+					// 10%概率永远消失
+					var is_permanent = Math.random() < 0.1;
+					
+					if (is_permanent) {
+						// 永远消失 - 直接删除塔
+						tower.is_valid = false;
+						tower.is_visiable = false;
+						if (tower.grid && tower.grid.building === tower) {
+							tower.grid.building = null;
+						}
+						
+						// 永久消失特效
+						this.createPermanentDisappearEffect(tower);
+						
+						// 显示永久消失提示
+						if (this.scene && this.scene.panel && this.scene.panel.balloontip) {
+							this.scene.panel.balloontip.msg(TD._t("tower_permanently_destroyed"), null);
+						}
+					} else {
+						// 临时消失
+						tower.is_visiable = false;
+						tower.disappear_duration = this.disappear_duration;
+						this.disappeared_towers.push(tower);
+						
+						// 消失特效
+						this.createDisappearEffect(tower);
+					}
+				}
+			}
+		},
+		
+		createSkillEffect: function(skill_type) {
+			if (!this.scene) return;
+			
+			var effect = new TD.Element("frost-destroyer-skill-" + Date.now(), {});
+			effect.is_valid = true;
+			effect.is_visiable = true;
+			effect.wait = Math.floor(TD.exp_fps * 0.8);
+			effect.cx = this.cx;
+			effect.cy = this.cy;
+			effect.skill_type = skill_type;
+			
+			effect.step = function() {
+				this.wait--;
+				if (this.wait <= 0) this.is_valid = false;
+			};
+			
+			effect.render = function() {
+				if (!this.is_valid) return;
+				var ctx = TD.ctx;
+				var alpha = this.wait / Math.floor(TD.exp_fps * 0.8);
+				
+				ctx.save();
+				ctx.globalAlpha = alpha;
+				
+				// 技能光环
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, 40 + (1 - alpha) * 20, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.strokeStyle = this.skill_type === 'freeze' ? "#00ffff" : "#ff00ff";
+				ctx.lineWidth = 4 * _TD.retina;
+				ctx.stroke();
+				
+				// 技能文字
+				ctx.fillStyle = this.skill_type === 'freeze' ? "#00ffff" : "#ff00ff";
+				ctx.font = "bold 16px Arial";
+				ctx.textAlign = "center";
+				ctx.fillText(this.skill_type === 'freeze' ? "冻结" : "消失", this.cx, this.cy - 10);
+				
+				ctx.restore();
+			};
+			
+			this.scene.addElement(effect, 1, 9);
+		},
+		
+		createFreezeEffect: function(tower) {
+			if (!this.scene) return;
+			
+			var effect = new TD.Element("tower-freeze-" + tower.id, {});
+			effect.is_valid = true;
+			effect.is_visiable = true;
+			effect.wait = this.freeze_duration;
+			effect.cx = tower.cx;
+			effect.cy = tower.cy;
+			
+			effect.step = function() {
+				this.wait--;
+				if (this.wait <= 0) this.is_valid = false;
+			};
+			
+			effect.render = function() {
+				if (!this.is_valid) return;
+				var ctx = TD.ctx;
+				var alpha = Math.max(0.1, this.wait / this.freeze_duration);
+				
+				ctx.save();
+				ctx.globalAlpha = alpha;
+				
+				// 冰霜光环
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, 30, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.strokeStyle = "#00ffff";
+				ctx.lineWidth = 3 * _TD.retina;
+				ctx.stroke();
+				
+				// 雪花粒子
+				for (var i = 0; i < 6; i++) {
+					var angle = (Date.now() / 1000 + i * Math.PI / 3) % (Math.PI * 2);
+					var x = this.cx + Math.cos(angle) * 25;
+					var y = this.cy + Math.sin(angle) * 25;
+					ctx.beginPath();
+					ctx.arc(x, y, 2, 0, Math.PI * 2, true);
+					ctx.closePath();
+					ctx.fillStyle = "#ffffff";
+					ctx.fill();
+				}
+				
+				ctx.restore();
+			};
+			
+			this.scene.addElement(effect, 1, 7);
+		},
+		
+		createDisappearEffect: function(tower) {
+			if (!this.scene) return;
+			
+			var effect = new TD.Element("tower-disappear-" + tower.id, {});
+			effect.is_valid = true;
+			effect.is_visiable = true;
+			effect.wait = Math.floor(TD.exp_fps * 0.5);
+			effect.cx = tower.cx;
+			effect.cy = tower.cy;
+			
+			effect.step = function() {
+				this.wait--;
+				if (this.wait <= 0) this.is_valid = false;
+			};
+			
+			effect.render = function() {
+				if (!this.is_valid) return;
+				var ctx = TD.ctx;
+				var alpha = this.wait / Math.floor(TD.exp_fps * 0.5);
+				
+				ctx.save();
+				ctx.globalAlpha = alpha;
+				
+				// 消失光环
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, 35, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.strokeStyle = "#ff00ff";
+				ctx.lineWidth = 4 * _TD.retina;
+				ctx.stroke();
+				
+				// 扭曲效果
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, 20, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.strokeStyle = "#ff00ff";
+				ctx.lineWidth = 2 * _TD.retina;
+				ctx.stroke();
+				
+				ctx.restore();
+			};
+			
+			this.scene.addElement(effect, 1, 7);
+		},
+
+		createPermanentDisappearEffect: function(tower) {
+			if (!this.scene) return;
+
+			var effect = new TD.Element("tower-permanent-disappear-" + tower.id, {});
+			effect.is_valid = true;
+			effect.is_visiable = true;
+			effect.wait = Math.floor(TD.exp_fps * 1.2); // 持续时间更长
+			effect.cx = tower.cx;
+			effect.cy = tower.cy;
+
+			effect.step = function() {
+				this.wait--;
+				if (this.wait <= 0) this.is_valid = false;
+			};
+
+			effect.render = function() {
+				if (!this.is_valid) return;
+				var ctx = TD.ctx;
+				var alpha = this.wait / Math.floor(TD.exp_fps * 1.2);
+
+				ctx.save();
+				ctx.globalAlpha = alpha;
+
+				// 多层红色光环 - 更震撼的效果
+				for (var i = 0; i < 3; i++) {
+					var radius = 30 + i * 15 + (1 - alpha) * 20;
+					ctx.beginPath();
+					ctx.arc(this.cx, this.cy, radius, 0, Math.PI * 2, true);
+					ctx.closePath();
+					ctx.strokeStyle = "#ff0000";
+					ctx.lineWidth = (4 - i) * _TD.retina;
+					ctx.stroke();
+				}
+
+				// 中心爆炸效果
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, 20 + (1 - alpha) * 30, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.fillStyle = "#ff0000";
+				ctx.globalAlpha = alpha * 0.6;
+				ctx.fill();
+
+				// 永久消失文字
+				ctx.fillStyle = "#ff0000";
+				ctx.font = "bold 18px Arial";
+				ctx.textAlign = "center";
+				ctx.globalAlpha = alpha;
+				ctx.fillText("永久摧毁", this.cx, this.cy - 20);
+
+				ctx.restore();
+			};
+
+			this.scene.addElement(effect, 1, 9); // 层级与技能特效一致
+		},
+		
+		render: function() {
+			if (!this.is_visiable) return;
+			var ctx = TD.ctx;
+			
+			ctx.save();
+			
+			// 主体 - 冰霜破坏者
+			ctx.fillStyle = "#0066cc";
+			ctx.beginPath();
+			ctx.arc(this.cx, this.cy, this.r, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fill();
+			
+			// 冰霜装饰
+			ctx.strokeStyle = "#00ffff";
+			ctx.lineWidth = 3 * _TD.retina;
+			ctx.beginPath();
+			ctx.arc(this.cx, this.cy, this.r + 5, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.stroke();
+			
+			// 眼睛
+			ctx.fillStyle = "#ff0000";
+			ctx.beginPath();
+			ctx.arc(this.cx - 8, this.cy - 5, 4, 0, Math.PI * 2, true);
+			ctx.arc(this.cx + 8, this.cy - 5, 4, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fill();
+			
+			// 技能冷却指示器
+			var cooldown_ratio = this.skill_cooldown / this.skill_interval;
+			if (cooldown_ratio < 0.3) { // 即将释放技能
+				ctx.strokeStyle = "#ffff00";
+				ctx.lineWidth = 2 * _TD.retina;
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, this.r + 8, 0, Math.PI * 2, true);
+				ctx.closePath();
+				ctx.stroke();
+			}
+			
+			// 名称标签
+			ctx.fillStyle = "#ffffff";
+			ctx.font = "12px Arial";
+			ctx.textAlign = "center";
+			ctx.fillText("冰霜破坏者", this.cx, this.cy + this.r + 20);
+			
+			ctx.restore();
+		}
+	};
+	
+	/**
+	 * 创建冰霜破坏者怪兽
+	 * @param id {String}
+	 * @param cfg {Object} 需包含 scene, map
+	 */
+	TD.FrostDestroyer = function(id, cfg) {
+		var destroyer = new TD.Element(id, cfg);
+		TD.lang.mix(destroyer, frost_destroyer_obj);
+		destroyer._init(cfg);
+		return destroyer;
 	};
 
 }); // _TD.a.push end
