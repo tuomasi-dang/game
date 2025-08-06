@@ -1278,7 +1278,7 @@ _TD.a.push(function (TD) {
 			this.is_valid = true;
 			this.is_visiable = true;
 			this.life = 30;
-			this.speed = 4.0; // 小兵速度
+			this.speed = 5.0; // 小兵速度
 			this.target = null;
 			this.step_level = cfg.step_level || 1;
 			this.render_level = cfg.render_level || 6;

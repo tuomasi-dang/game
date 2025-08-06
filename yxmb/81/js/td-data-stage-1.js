@@ -149,15 +149,14 @@ _TD.a.push(function (TD) {
 						grids_cfg: [
 							{ pos: [0, 0], building: "LMG" },
 							{ pos: [1, 0], building: "cannon" },
-							{ pos: [2, 0], building: "HMG" },
-							{ pos: [0, 1], building: "ice_tower" },
-							{ pos: [1, 1], building: "emp_cannon" },
-							{ pos: [2, 1], building: "laser_gun" },
-							{ pos: [0, 2], building: "poison_tower" },
-							{ pos: [1, 2], building: "wall" },
-							{ pos: [2, 2], building: "missile_silo" },
-							{ pos: [0, 3], building: "energy_absorber" },
-							{ pos: [1, 3], building: "summon_tower" }
+							{ pos: [2, 0], building: "ice_tower" },
+							{ pos: [0, 1], building: "HMG" },
+							{ pos: [0, 2], building: "emp_cannon" },
+							{ pos: [2, 2], building: "laser_gun" },
+							{ pos: [1, 1], building: "poison_tower" },
+							{ pos: [2, 3], building: "wall" },
+							{ pos: [2, 1], building: "energy_absorber" },
+							{ pos: [1, 2], building: "summon_tower" }
 						]
 					}
 				},
