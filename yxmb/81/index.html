@@ -1,62 +1,63 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=1.0, user-scalable=yes">
-	<title>HTML5 Tower Defense</title>
-	<link href="css/c.css" rel="stylesheet" media="screen">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=1.0, user-scalable=yes">
+    <title>HTML5 Tower Defense</title>
+    <link href="css/c.css" rel="stylesheet" media="screen">
 </head>
 
 <body id="tower-defense">
 <div id="wrapper">
-	<div id="td-wrapper">
-		<h1>《托马斯-无敌塔防》</h1>
+    <div id="td-wrapper">
+        <h1>《托马斯-无敌塔防》</h1>
 
-		<div id="td-loading">加载中...</div>
-		<div id="td-board">
-			<canvas id="td-canvas">抱歉，您的浏览器不支持 HTML 5 Canvas 标签，请使用 IE9 / Chrome / Opera 等浏览器浏览本页以获得最佳效果。</canvas>
-		</div>
-	</div>
+        <div id="td-loading">加载中...</div>
+        <div id="td-board">
+            <canvas id="td-canvas">抱歉，您的浏览器不支持 HTML 5 Canvas 标签，请使用 IE9 / Chrome / Opera 等浏览器浏览本页以获得最佳效果。</canvas>
+        </div>
+    </div>
 </div>
 
 <!-- 迭代日志面板（时间线风格） -->
 <style>
-#changelog-panel { position:fixed;right:18px;bottom:18px;width:300px;max-height:260px;z-index:9999;background:rgba(30,40,60,0.97);color:#fff;border-radius:10px;box-shadow:0 2px 12px #000a;padding:14px 14px 10px 14px;overflow-y:auto;font-size:13px;line-height:1.6;backdrop-filter:blur(2px); }
-#changelog-panel .changelog-title { font-weight:bold;font-size:16px;margin-bottom:7px;letter-spacing:0.5px; }
-#changelog-timeline { position:relative;margin:0 0 0 20px;padding:0; }
-#changelog-timeline li { list-style:none;position:relative;margin-bottom:13px;padding-left:13px; }
-#changelog-timeline li:last-child { margin-bottom:0; }
-#changelog-timeline .dot { position:absolute;left:-20px;top:4px;width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#0ff,#39f 60%,#fff 100%);box-shadow:0 0 4px #0ffb; border:1.5px solid #fff; }
-#changelog-timeline .ver { font-weight:bold;color:#0ff;font-size:12px;margin-right:5px;letter-spacing:0.2px; }
-#changelog-timeline .date { color:#aaa;font-size:11px;margin-left:2px; }
-#changelog-timeline .desc { margin-top:1px;font-size:12px; }
-#changelog-timeline:before { content:'';position:absolute;left:-14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#0ff,#39f 80%,#fff 100%);border-radius:1px; }
-#changelog-panel .close-btn { position:absolute;top:7px;right:10px;cursor:pointer;font-size:15px;opacity:0.7;transition:opacity 0.2s; }
-#changelog-panel .close-btn:hover { opacity:1; }
+    #changelog-panel { position:fixed;right:18px;bottom:18px;width:300px;max-height:260px;z-index:9999;background:rgba(30,40,60,0.97);color:#fff;border-radius:10px;box-shadow:0 2px 12px #000a;padding:14px 14px 10px 14px;overflow-y:auto;font-size:13px;line-height:1.6;backdrop-filter:blur(2px); }
+    #changelog-panel .changelog-title { font-weight:bold;font-size:16px;margin-bottom:7px;letter-spacing:0.5px; }
+    #changelog-timeline { position:relative;margin:0 0 0 20px;padding:0; }
+    #changelog-timeline li { list-style:none;position:relative;margin-bottom:13px;padding-left:13px; }
+    #changelog-timeline li:last-child { margin-bottom:0; }
+    #changelog-timeline .dot { position:absolute;left:-20px;top:4px;width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#0ff,#39f 60%,#fff 100%);box-shadow:0 0 4px #0ffb; border:1.5px solid #fff; }
+    #changelog-timeline .ver { font-weight:bold;color:#0ff;font-size:12px;margin-right:5px;letter-spacing:0.2px; }
+    #changelog-timeline .date { color:#aaa;font-size:11px;margin-left:2px; }
+    #changelog-timeline .desc { margin-top:1px;font-size:12px; }
+    #changelog-timeline:before { content:'';position:absolute;left:-14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,#0ff,#39f 80%,#fff 100%);border-radius:1px; }
+    #changelog-panel .close-btn { position:absolute;top:7px;right:10px;cursor:pointer;font-size:15px;opacity:0.7;transition:opacity 0.2s; }
+    #changelog-panel .close-btn:hover { opacity:1; }
 </style>
 <div id="changelog-panel">
-  <div class="changelog-title">迭代日志</div>
-  <ul id="changelog-timeline">
-      <li><span class="dot"></span><span class="ver">v3.0.2</span><span class="date">2025-08-07</span><div class="desc">冰霜破坏者坐标调整，UI调整</div></li>
-      <li><span class="dot"></span><span class="ver">v3.0.1</span><span class="date">2025-08-07</span><div class="desc">冰霜破坏者效果平衡</div></li>
-      <li><span class="dot"></span><span class="ver">v3.0</span><span class="date">2025-08-06</span><div class="desc">大版本迭代-新增 冰霜破坏者 怪兽，会将你的塔消失哦！！！</div></li>
-      <li><span class="dot"></span><span class="ver">v2.5.2</span><span class="date">2025-08-03</span><div class="desc">调整UI位置并暂时去除导弹发射井</div></li>
-      <li><span class="dot"></span><span class="ver">v2.5.1</span><span class="date">2025-07-24</span><div class="desc">召唤塔，小兵调整为20秒后消失</div></li>
-      <li><span class="dot"></span><span class="ver">v2.5</span><span class="date">2025-07-24</span><div class="desc">新增召唤塔，小兵伤害量为剩余血量的30%</div></li>
-      <li><span class="dot"></span><span class="ver">v2.4.4</span><span class="date">2025-07-24</span><div class="desc">修复 TD is not defined 报错</div></li>
-      <li><span class="dot"></span><span class="ver">v2.4.3</span><span class="date">2025-07-23</span><div class="desc">修复炮台升级按钮位置</div></li>
-      <li><span class="dot"></span><span class="ver">v2.4.2</span><span class="date">2025-07-23</span><div class="desc">新增反馈功能</div></li>
-      <li><span class="dot"></span><span class="ver">v2.4.1</span><span class="date">2025-07-23</span><div class="desc">优化所有塔的UI和特效表现</div></li>
-      <li><span class="dot"></span><span class="ver">v2.4</span><span class="date">2025-07-20</span><div class="desc">新增能量吸收塔-转化金币</div></li>
-      <li><span class="dot"></span><span class="ver">v2.3.2</span><span class="date">2025-02-29</span><div class="desc">修复高频爆炸导致页面卡死问题</div></li>
-      <li><span class="dot"></span><span class="ver">v2.3.1</span><span class="date">2025-02-23</span><div class="desc">优化导弹发射井的攻击范围和粒子特效</div></li>
-      <li><span class="dot"></span><span class="ver">v2.3</span><span class="date">2024-11-11</span><div class="desc">新增导弹发射井</div></li>
-      <li><span class="dot"></span><span class="ver">v2.2</span><span class="date">2024-07-23</span><div class="desc">新增毒雾喷射塔-持续掉血</div></li>
-      <li><span class="dot"></span><span class="ver">v2.1</span><span class="date">2023-06-08</span><div class="desc">新增EMP炮-优化链接敌人光线特效</div></li>
-      <li><span class="dot"></span><span class="ver">v2.0</span><span class="date">2023-03-09</span><div class="desc">新增冰霜塔-修复冰霜特效</div></li>
-      <li><span class="dot"></span><span class="ver">v1.0</span><span class="date">2023-02-10</span><div class="desc">塔防第一版预提交</div></li>
-  </ul>
-  <div class="close-btn" onclick="document.getElementById('changelog-panel').style.display='none'">×</div>
+    <div class="changelog-title">迭代日志</div>
+    <ul id="changelog-timeline">
+        <li><span class="dot"></span><span class="ver">v3.1</span><span class="date">2025-08-07</span><div class="desc">新增赞赏功能</div></li>
+        <li><span class="dot"></span><span class="ver">v3.0.2</span><span class="date">2025-08-07</span><div class="desc">冰霜破坏者坐标调整，UI调整</div></li>
+        <li><span class="dot"></span><span class="ver">v3.0.1</span><span class="date">2025-08-07</span><div class="desc">冰霜破坏者效果平衡</div></li>
+        <li><span class="dot"></span><span class="ver">v3.0</span><span class="date">2025-08-06</span><div class="desc">大版本迭代-新增 冰霜破坏者 怪兽，会将你的塔消失哦！！！</div></li>
+        <li><span class="dot"></span><span class="ver">v2.5.2</span><span class="date">2025-08-03</span><div class="desc">调整UI位置并暂时去除导弹发射井</div></li>
+        <li><span class="dot"></span><span class="ver">v2.5.1</span><span class="date">2025-07-24</span><div class="desc">召唤塔，小兵调整为20秒后消失</div></li>
+        <li><span class="dot"></span><span class="ver">v2.5</span><span class="date">2025-07-24</span><div class="desc">新增召唤塔，小兵伤害量为剩余血量的30%</div></li>
+        <li><span class="dot"></span><span class="ver">v2.4.4</span><span class="date">2025-07-24</span><div class="desc">修复 TD is not defined 报错</div></li>
+        <li><span class="dot"></span><span class="ver">v2.4.3</span><span class="date">2025-07-23</span><div class="desc">修复炮台升级按钮位置</div></li>
+        <li><span class="dot"></span><span class="ver">v2.4.2</span><span class="date">2025-07-23</span><div class="desc">新增反馈功能</div></li>
+        <li><span class="dot"></span><span class="ver">v2.4.1</span><span class="date">2025-07-23</span><div class="desc">优化所有塔的UI和特效表现</div></li>
+        <li><span class="dot"></span><span class="ver">v2.4</span><span class="date">2025-07-20</span><div class="desc">新增能量吸收塔-转化金币</div></li>
+        <li><span class="dot"></span><span class="ver">v2.3.2</span><span class="date">2025-02-29</span><div class="desc">修复高频爆炸导致页面卡死问题</div></li>
+        <li><span class="dot"></span><span class="ver">v2.3.1</span><span class="date">2025-02-23</span><div class="desc">优化导弹发射井的攻击范围和粒子特效</div></li>
+        <li><span class="dot"></span><span class="ver">v2.3</span><span class="date">2024-11-11</span><div class="desc">新增导弹发射井</div></li>
+        <li><span class="dot"></span><span class="ver">v2.2</span><span class="date">2024-07-23</span><div class="desc">新增毒雾喷射塔-持续掉血</div></li>
+        <li><span class="dot"></span><span class="ver">v2.1</span><span class="date">2023-06-08</span><div class="desc">新增EMP炮-优化链接敌人光线特效</div></li>
+        <li><span class="dot"></span><span class="ver">v2.0</span><span class="date">2023-03-09</span><div class="desc">新增冰霜塔-修复冰霜特效</div></li>
+        <li><span class="dot"></span><span class="ver">v1.0</span><span class="date">2023-02-10</span><div class="desc">塔防第一版预提交</div></li>
+    </ul>
+    <div class="close-btn" onclick="document.getElementById('changelog-panel').style.display='none'">×</div>
 </div>
 
 <!-- 反馈按钮和弹窗 -->
@@ -69,57 +70,103 @@
         font-size: 15px; font-weight: bold; letter-spacing: 1px;
         padding: 10px 26px; cursor: pointer; transition: background 0.2s,box-shadow 0.2s;
     }
-#feedback-btn:hover { background: linear-gradient(135deg,#39f,#0ff 80%); box-shadow:0 4px 18px #0ff6; }
-#feedback-modal-bg {
-  display:none; position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10002;background:rgba(0,0,0,0.25);}
-#feedback-modal {
-  display:none; position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10003;
-  background:rgba(255,255,255,0.98);border-radius:12px;box-shadow:0 4px 32px #000a;
-  min-width:320px;max-width:90vw;width:370px;padding:28px 28px 18px 28px;
-}
-#feedback-modal h2 {margin:0 0 12px 0;font-size:20px;color:#222;letter-spacing:1px;}
-#feedback-modal textarea {
-  width:100%;min-height:80px;max-height:180px;resize:vertical;border-radius:7px;border:1.5px solid #0cf;padding:8px;font-size:15px;line-height:1.6;margin-bottom:14px;box-sizing:border-box;}
-#feedback-modal input[type=email] {
-  width:100%;border-radius:7px;border:1.5px solid #0cf;padding:7px;font-size:15px;margin-bottom:14px;box-sizing:border-box;}
-#feedback-modal .modal-actions {display:flex;justify-content:flex-end;gap:12px;}
-#feedback-modal button {
-  background:linear-gradient(135deg,#0ff,#39f 80%);color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s;}
-#feedback-modal button:hover {background:linear-gradient(135deg,#39f,#0ff 80%);}
-#feedback-modal .close-x {position:absolute;top:10px;right:16px;font-size:20px;color:#888;cursor:pointer;}
-#feedback-modal .close-x:hover {color:#0cf;}
-#feedback-modal .tip {font-size:13px;color:#888;margin-bottom:8px;}
+    #feedback-btn:hover { background: linear-gradient(135deg,#39f,#0ff 80%); box-shadow:0 4px 18px #0ff6; }
+    #feedback-modal-bg {
+        display:none; position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10002;background:rgba(0,0,0,0.25);}
+    #feedback-modal {
+        display:none; position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10003;
+        background:rgba(255,255,255,0.98);border-radius:12px;box-shadow:0 4px 32px #000a;
+        min-width:320px;max-width:90vw;width:370px;padding:28px 28px 18px 28px;
+    }
+    #feedback-modal h2 {margin:0 0 12px 0;font-size:20px;color:#222;letter-spacing:1px;}
+    #feedback-modal textarea {
+        width:100%;min-height:80px;max-height:180px;resize:vertical;border-radius:7px;border:1.5px solid #0cf;padding:8px;font-size:15px;line-height:1.6;margin-bottom:14px;box-sizing:border-box;}
+    #feedback-modal input[type=email] {
+        width:100%;border-radius:7px;border:1.5px solid #0cf;padding:7px;font-size:15px;margin-bottom:14px;box-sizing:border-box;}
+    #feedback-modal .modal-actions {display:flex;justify-content:flex-end;gap:12px;}
+    #feedback-modal button {
+        background:linear-gradient(135deg,#0ff,#39f 80%);color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s;}
+    #feedback-modal button:hover {background:linear-gradient(135deg,#39f,#0ff 80%);}
+    #feedback-modal .close-x {position:absolute;top:10px;right:16px;font-size:20px;color:#888;cursor:pointer;}
+    #feedback-modal .close-x:hover {color:#0cf;}
+    #feedback-modal .tip {font-size:13px;color:#888;margin-bottom:8px;}
 </style>
 <button id="feedback-btn" onclick="document.getElementById('feedback-modal-bg').style.display='block';document.getElementById('feedback-modal').style.display='block';">反馈</button>
 <div id="feedback-modal-bg" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';"></div>
 <div id="feedback-modal">
-  <span class="close-x" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';">×</span>
-  <h2>意见反馈</h2>
-  <div class="tip">欢迎提出建议、遇到的问题或新功能需求，我们会持续优化体验！</div>
-  <form id="feedback-form" onsubmit="return sendFeedback(event)">
-    <textarea name="content" required placeholder="请填写您的反馈内容（必填）"></textarea>
-    <input type="email" name="email" placeholder="您的邮箱（可选，便于联系）" />
-    <div class="modal-actions">
-      <button type="button" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';">取消</button>
-      <button type="submit">发送</button>
-    </div>
-  </form>
+    <span class="close-x" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';">×</span>
+    <h2>意见反馈</h2>
+    <div class="tip">欢迎提出建议、遇到的问题或新功能需求，我们会持续优化体验！</div>
+    <form id="feedback-form" onsubmit="return sendFeedback(event)">
+        <textarea name="content" required placeholder="请填写您的反馈内容（必填）"></textarea>
+        <input type="email" name="email" placeholder="您的邮箱（可选，便于联系）" />
+        <div class="modal-actions">
+            <button type="button" onclick="document.getElementById('feedback-modal-bg').style.display='none';document.getElementById('feedback-modal').style.display='none';">取消</button>
+            <button type="submit">发送</button>
+        </div>
+    </form>
 </div>
 <script>
-function sendFeedback(e) {
-  e.preventDefault();
-  var form = document.getElementById('feedback-form');
-  var content = form.content.value.trim();
-  var email = form.email.value.trim();
-  if (!content) { alert('请填写反馈内容！'); return false; }
-  var mailto = 'mailto:tuomasi360@foxmail.com?subject=' + encodeURIComponent('无敌塔防-用户反馈') +
-    '&body=' + encodeURIComponent(content + (email ? ('\n\n联系方式: ' + email) : ''));
-  window.open(mailto);
-  document.getElementById('feedback-modal-bg').style.display='none';
-  document.getElementById('feedback-modal').style.display='none';
-  setTimeout(function(){ alert('感谢您的反馈！'); }, 300);
-  return false;
-}
+    function sendFeedback(e) {
+        e.preventDefault();
+        var form = document.getElementById('feedback-form');
+        var content = form.content.value.trim();
+        var email = form.email.value.trim();
+        if (!content) { alert('请填写反馈内容！'); return false; }
+        var mailto = 'mailto:tuomasi360@foxmail.com?subject=' + encodeURIComponent('无敌塔防-用户反馈') +
+            '&body=' + encodeURIComponent(content + (email ? ('\n\n联系方式: ' + email) : ''));
+        window.open(mailto);
+        document.getElementById('feedback-modal-bg').style.display='none';
+        document.getElementById('feedback-modal').style.display='none';
+        setTimeout(function(){ alert('感谢您的反馈！'); }, 300);
+        return false;
+    }
+</script>
+
+<style>
+    #donate-btn {
+        position: fixed; right: 18px; bottom: 320px; z-index: 10001;
+        background: linear-gradient(135deg,#ffb300,#ff4081 80%);
+        color: #fff; border: none; border-radius: 22px;
+        box-shadow: 0 2px 10px #0005;
+        font-size: 15px; font-weight: bold; letter-spacing: 1px;
+        padding: 10px 26px; cursor: pointer; transition: background 0.2s,box-shadow 0.2s;
+        display: flex; align-items: center; gap: 8px;
+    }
+    #donate-btn:hover { background: linear-gradient(135deg,#ff4081,#ffb300 80%); box-shadow:0 4px 18px #ffb30099; }
+    #donate-modal-bg {
+        display:none; position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:10002;background:rgba(0,0,0,0.35);}
+    #donate-modal {
+        display:none; position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10003;
+        background:rgba(255,255,255,0.98);border-radius:14px;box-shadow:0 4px 32px #000a;
+        min-width:260px;max-width:95vw;width:350px;padding:24px 18px 18px 18px;text-align:center;
+    }
+    #donate-modal .close-x {position:absolute;top:10px;right:18px;font-size:22px;color:#888;cursor:pointer;}
+    #donate-modal .close-x:hover {color:#ffb300;}
+    #donate-modal img {max-width:100%;border-radius:10px;box-shadow:0 2px 12px #0002;margin-bottom:10px;}
+    #donate-modal .tip {font-size:14px;color:#888;margin-bottom:8px;}
+    @media (max-width: 600px) {
+        #donate-modal {width:95vw;min-width:0;padding:14px 2vw 10px 2vw;}
+        #donate-btn {font-size:14px;padding:8px 16px;}
+    }
+</style>
+<button id="donate-btn" title="支持作者" onclick="showDonateModal()">💖 捐赠</button>
+<div id="donate-modal-bg" onclick="hideDonateModal()"></div>
+<div id="donate-modal">
+    <span class="close-x" onclick="hideDonateModal()">×</span>
+    <div class="tip">如果你喜欢本游戏，欢迎请作者喝杯咖啡 ☕</div>
+    <img src="pic/money.jpg" alt="捐赠二维码" draggable="true" oncontextmenu="return true;" />
+    <div style="font-size:13px;color:#aaa;">长按或右键保存二维码</div>
+</div>
+<script>
+    function showDonateModal() {
+        document.getElementById('donate-modal-bg').style.display = 'block';
+        document.getElementById('donate-modal').style.display = 'block';
+    }
+    function hideDonateModal() {
+        document.getElementById('donate-modal-bg').style.display = 'none';
+        document.getElementById('donate-modal').style.display = 'none';
+    }
 </script>
 
 <script type="text/javascript" src="js/td.js"></script>
@@ -141,11 +188,11 @@ function sendFeedback(e) {
 
 <!--<script type="text/javascript" src="td-pkg-min.js?fmts=1"></script>-->
 <script type="text/javascript">
-	window.onload = function () {
-		_TD.init("td-board", true);
-		document.getElementById("td-loading").style.display = "none";
-		document.getElementById("td-board").style.display = "block";
-	};
+    window.onload = function () {
+        _TD.init("td-board", true);
+        document.getElementById("td-loading").style.display = "none";
+        document.getElementById("td-board").style.display = "block";
+    };
 </script>
 </body>
 </html>
