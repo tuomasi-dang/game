@@ -88,9 +88,8 @@ var _TD = {
 				if (this.stage.current_act && this.stage.current_act.current_scene && this.stage.current_act.current_scene.map) {
 					new TD.FrostDestroyer("frost-destroyer", {
 						scene: this.stage.current_act.current_scene,
-						map: this.stage.current_act.current_scene.map,
-						cx: 50,
-						cy: 550
+						map: this.stage.current_act.current_scene.map
+						// 使用 frost_destroyer_obj 中的默认坐标设置
 					});
 				}
 				

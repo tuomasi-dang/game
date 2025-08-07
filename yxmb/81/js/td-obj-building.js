@@ -1393,8 +1393,13 @@ _TD.a.push(function (TD) {
 	var frost_destroyer_obj = {
 		_init: function(cfg) {
 			cfg = cfg || {};
-			this.cx = cfg.cx || 50; // 固定在左下角
-			this.cy = cfg.cy || 550;
+			// 计算面板位置
+			var panel_x = TD.padding * 2 + TD.grid_size * 16;
+			var panel_y = TD.padding;
+			var pause_button_y = panel_y + 400 * _TD.retina;
+			
+			this.cx = cfg.cx || (panel_x + 50); // 固定在面板右侧
+			this.cy = cfg.cy || (pause_button_y + 80 * _TD.retina); // 调整到暂停按钮下方80像素，避免重叠
 			this.r = 25;
 			this.is_valid = true;
 			this.is_visiable = true;
@@ -1807,50 +1812,116 @@ _TD.a.push(function (TD) {
 		},
 		
 		render: function() {
-			if (!this.is_visiable) return;
-			var ctx = TD.ctx;
+			if (!this.is_valid || !this.is_visiable) return;
 			
+			var ctx = TD.ctx;
 			ctx.save();
 			
-			// 主体 - 冰霜破坏者
-			ctx.fillStyle = "#0066cc";
+
+			
+			// 绘制冰霜破坏者 - 怪兽头部
+			// 主体 - 深蓝色头部
+			ctx.fillStyle = "rgba(30, 60, 120, 0.9)";
 			ctx.beginPath();
 			ctx.arc(this.cx, this.cy, this.r, 0, Math.PI * 2, true);
 			ctx.closePath();
 			ctx.fill();
 			
-			// 冰霜装饰
-			ctx.strokeStyle = "#00ffff";
-			ctx.lineWidth = 3 * _TD.retina;
-			ctx.beginPath();
-			ctx.arc(this.cx, this.cy, this.r + 5, 0, Math.PI * 2, true);
-			ctx.closePath();
+			// 头部边框 - 冰蓝色
+			ctx.strokeStyle = "rgba(100, 200, 255, 0.8)";
+			ctx.lineWidth = 3;
 			ctx.stroke();
 			
-			// 眼睛
-			ctx.fillStyle = "#ff0000";
+			// 绘制角 - 冰霜角
+			ctx.fillStyle = "rgba(150, 200, 255, 0.9)";
+			ctx.beginPath();
+			ctx.moveTo(this.cx - 15, this.cy - this.r - 5);
+			ctx.lineTo(this.cx - 8, this.cy - this.r - 15);
+			ctx.lineTo(this.cx - 2, this.cy - this.r - 8);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(this.cx + 15, this.cy - this.r - 5);
+			ctx.lineTo(this.cx + 8, this.cy - this.r - 15);
+			ctx.lineTo(this.cx + 2, this.cy - this.r - 8);
+			ctx.closePath();
+			ctx.fill();
+			
+			// 绘制眼睛 - 红色发光眼睛
+			ctx.fillStyle = "rgba(255, 50, 50, 0.9)";
 			ctx.beginPath();
 			ctx.arc(this.cx - 8, this.cy - 5, 4, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
 			ctx.arc(this.cx + 8, this.cy - 5, 4, 0, Math.PI * 2, true);
 			ctx.closePath();
 			ctx.fill();
 			
-			// 技能冷却指示器
+			// 眼睛高光
+			ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+			ctx.beginPath();
+			ctx.arc(this.cx - 9, this.cy - 6, 1.5, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.arc(this.cx + 7, this.cy - 6, 1.5, 0, Math.PI * 2, true);
+			ctx.closePath();
+			ctx.fill();
+			
+			// 绘制嘴巴 - 冰霜獠牙
+			ctx.fillStyle = "rgba(200, 220, 255, 0.9)";
+			ctx.beginPath();
+			ctx.moveTo(this.cx - 6, this.cy + 8);
+			ctx.lineTo(this.cx - 3, this.cy + 15);
+			ctx.lineTo(this.cx, this.cy + 12);
+			ctx.lineTo(this.cx + 3, this.cy + 15);
+			ctx.lineTo(this.cx + 6, this.cy + 8);
+			ctx.closePath();
+			ctx.fill();
+			
+			// 绘制冰霜纹理
+			ctx.strokeStyle = "rgba(150, 200, 255, 0.6)";
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(this.cx - 15, this.cy - 10);
+			ctx.lineTo(this.cx - 5, this.cy - 5);
+			ctx.moveTo(this.cx + 15, this.cy - 10);
+			ctx.lineTo(this.cx + 5, this.cy - 5);
+			ctx.moveTo(this.cx - 10, this.cy + 5);
+			ctx.lineTo(this.cx + 10, this.cy + 5);
+			ctx.stroke();
+			
+			// 绘制技能冷却指示器 - 冰霜光环
 			var cooldown_ratio = this.skill_cooldown / this.skill_interval;
-			if (cooldown_ratio < 0.3) { // 即将释放技能
-				ctx.strokeStyle = "#ffff00";
-				ctx.lineWidth = 2 * _TD.retina;
+			if (cooldown_ratio < 1) {
+				// 外圈冰霜光环
+				ctx.strokeStyle = "rgba(100, 200, 255, 0.8)";
+				ctx.lineWidth = 3;
 				ctx.beginPath();
-				ctx.arc(this.cx, this.cy, this.r + 8, 0, Math.PI * 2, true);
-				ctx.closePath();
+				ctx.arc(this.cx, this.cy, this.r + 8, 0, Math.PI * 2 * (1 - cooldown_ratio), true);
 				ctx.stroke();
+				
+				// 内圈能量指示
+				ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
+				ctx.beginPath();
+				ctx.arc(this.cx, this.cy, this.r * 0.6, 0, Math.PI * 2 * (1 - cooldown_ratio), true);
+				ctx.closePath();
+				ctx.fill();
 			}
 			
-			// 名称标签
-			ctx.fillStyle = "#ffffff";
-			ctx.font = "12px Arial";
+			// 绘制名称 - 冰霜效果
+			ctx.fillStyle = "rgba(200, 220, 255, 0.9)";
+			ctx.font = "bold 11px Arial";
 			ctx.textAlign = "center";
-			ctx.fillText("冰霜破坏者", this.cx, this.cy + this.r + 20);
+			ctx.fillText("冰霜破坏者", this.cx, this.cy + this.r + 15);
+			
+			// 名称阴影效果
+			ctx.fillStyle = "rgba(50, 100, 150, 0.6)";
+			ctx.fillText("冰霜破坏者", this.cx + 1, this.cy + this.r + 16);
 			
 			ctx.restore();
 		}
