@@ -1481,7 +1481,13 @@ _TD.a.push(function (TD) {
 		castSkill: function() {
 			if (!this.map) return;
 			
-			var skill_type = Math.random() < 0.6 ? 'freeze' : 'disappear';
+			// 根据防御塔数量调整技能类型概率
+			var freeze_prob = 0.6;
+			if (total_towers > 15) {
+				// 塔越多，消失技能概率越高
+				freeze_prob = Math.max(0.3, 0.6 - (total_towers - 15) * 0.02);
+			}
+			var skill_type = Math.random() < freeze_prob ? 'freeze' : 'disappear';
 			var affected_towers = [];
 			
 			// 收集所有防御塔
@@ -1493,8 +1499,22 @@ _TD.a.push(function (TD) {
 			
 			if (affected_towers.length === 0) return;
 			
-			// 随机选择1-3个塔
-			var count = Math.min(affected_towers.length, Math.floor(Math.random() * 3) + 1);
+			// 根据防御塔数量动态调整下次技能间隔
+			var total_towers = affected_towers.length;
+			if (total_towers > 20) {
+				// 塔越多，技能间隔越短，但最短不低于4秒
+				this.skill_interval = Math.max(4 * TD.exp_fps, 8 * TD.exp_fps - Math.floor(total_towers * 0.2) * TD.exp_fps);
+			}
+			
+			// 动态调整影响塔的数量：根据总塔数计算
+			var total_towers = affected_towers.length;
+			var base_count = Math.max(1, Math.floor(total_towers * 0.15)); // 基础影响15%的塔
+			var random_bonus = Math.floor(Math.random() * Math.max(1, Math.floor(total_towers * 0.1))); // 随机额外影响0-10%的塔
+			var count = Math.min(affected_towers.length, base_count + random_bonus);
+			
+			// 确保至少影响1个塔，最多影响总塔数的25%
+			count = Math.max(1, Math.min(count, Math.floor(total_towers * 0.25)));
+			
 			var selected_towers = [];
 			
 			for (var i = 0; i < count; i++) {
@@ -1508,14 +1528,20 @@ _TD.a.push(function (TD) {
 			if (skill_type === 'freeze') {
 				this.freezeTowers(selected_towers);
 			} else {
+				// 根据防御塔数量动态调整永久摧毁概率
+				var permanent_prob = 0.1; // 基础10%概率
+				if (total_towers > 10) {
+					permanent_prob = Math.min(0.25, 0.1 + (total_towers - 10) * 0.01); // 最多25%概率
+				}
+				
 				// 检查是否有永久摧毁的情况
 				for (var i = 0; i < selected_towers.length; i++) {
-					if (Math.random() < 0.1) {
+					if (Math.random() < permanent_prob) {
 						has_permanent = true;
 						break;
 					}
 				}
-				this.disappearTowers(selected_towers);
+				this.disappearTowers(selected_towers, permanent_prob);
 			}
 			
 			// 技能特效
@@ -1525,11 +1551,11 @@ _TD.a.push(function (TD) {
 			if (this.scene && this.scene.panel && this.scene.panel.balloontip) {
 				var skill_msg;
 				if (skill_type === 'freeze') {
-					skill_msg = TD._t("tower_frozen");
+					skill_msg = TD._t("tower_frozen") + " (影响" + count + "个塔)";
 				} else if (has_permanent) {
-					skill_msg = TD._t("disappear_with_permanent");
+					skill_msg = TD._t("disappear_with_permanent") + " (影响" + count + "个塔)";
 				} else {
-					skill_msg = TD._t("tower_disappeared");
+					skill_msg = TD._t("tower_disappeared") + " (影响" + count + "个塔)";
 				}
 				this.scene.panel.balloontip.msg(skill_msg, null);
 			}
@@ -1551,12 +1577,13 @@ _TD.a.push(function (TD) {
 			}
 		},
 		
-		disappearTowers: function(towers) {
+		disappearTowers: function(towers, permanent_prob) {
+			permanent_prob = permanent_prob || 0.1; // 默认10%概率
 			for (var i = 0; i < towers.length; i++) {
 				var tower = towers[i];
 				if (tower && tower.is_valid) {
-					// 10%概率永远消失
-					var is_permanent = Math.random() < 0.1;
+					// 动态概率永远消失
+					var is_permanent = Math.random() < permanent_prob;
 					
 					if (is_permanent) {
 						// 永远消失 - 直接删除塔
