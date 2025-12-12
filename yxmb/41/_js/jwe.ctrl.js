@@ -51,13 +51,29 @@ function uniEvt(Obj){
 			reform($(_focusUni));
 			
 			//++++++++++++++++++++++++++
-			//交换两个可以交换的棋子：
+			//交换两个可以交换的棋子（仅当相邻且能形成匹配时）：
 			if(_focusUni != this){
 				var TD2 = $(this).parent();
 				var TD = $(_focusUni).parent();
-				//点击交换:
-				switch2TDsUni_orgPlace(TD,TD2,true,true);
-				moveToZero(TD,TD2,"fast");
+				//检查是否相邻，只有相邻的方块才能交换
+				if(areTDsAdjacent(TD, TD2)){
+					//检查交换后是否能形成匹配，只有能形成匹配才能交换
+					if(willSwapCreateMatch(TD, TD2)){
+						//点击交换:
+						switch2TDsUni_orgPlace(TD,TD2,true,true);
+						moveToZero(TD,TD2,"fast");
+					} else {
+						// 交换后不能形成匹配，取消选中，选中新方块
+						_focusUni = this;
+						deform1A($(this));//变形
+						return; // 不执行后面的 _focusUni=null
+					}
+				} else {
+					// 不相邻，取消选中，选中新方块
+					_focusUni = this;
+					deform1A($(this));//变形
+					return; // 不执行后面的 _focusUni=null
+				}
 			}
 			//++++++++++++++++++++++++++
 			_focusUni=null;

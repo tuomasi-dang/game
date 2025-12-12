@@ -82,6 +82,93 @@ function getSwitcherTD(td, sign){
 
 
 /**
+* 检查两个td是否相邻（上下左右相邻）
+*@param TD1: 第1个封装的td对象
+*@param TD2: 第2个封装的td对象
+*@return: true表示相邻，false表示不相邻
+*/
+function areTDsAdjacent(TD1, TD2){
+	var id1 = TD1.attr("id");
+	var id2 = TD2.attr("id");
+	if(!id1 || !id2) return false;
+	
+	var ss1 = id1.split("_");
+	var ss2 = id2.split("_");
+	
+	var r1 = parseInt(ss1[1]);
+	var c1 = parseInt(ss1[2]);
+	var r2 = parseInt(ss2[1]);
+	var c2 = parseInt(ss2[2]);
+	
+	// 检查是否相邻：行差1且列相同，或者列差1且行相同
+	var rowDiff = Math.abs(r1 - r2);
+	var colDiff = Math.abs(c1 - c2);
+	
+	return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+}
+
+/**
+* 检查交换两个方块后是否能形成匹配（至少3个相同）
+*@param TD1: 第1个封装的td对象
+*@param TD2: 第2个封装的td对象
+*@return: true表示交换后能形成匹配，false表示不能
+*/
+function willSwapCreateMatch(TD1, TD2){
+	var o1 = TD1.find(".uni:first")[0];
+	var o2 = TD2.find(".uni:first")[0];
+	
+	if(!o1 || !o2) return false;
+	
+	// 临时交换内容（不改变视觉位置）
+	var temp1 = TD1.html();
+	var temp2 = TD2.html();
+	TD1.html(temp2);
+	TD2.html(temp1);
+	
+	// 重新获取交换后的对象
+	var newO1 = TD1.find(".uni:first")[0];
+	var newO2 = TD2.find(".uni:first")[0];
+	
+	var canMatch = false;
+	
+	if(newO1){
+		// 检查第一个方块交换后是否能形成匹配
+		try {
+			var nUp = chkLink(newO1, "up");
+			var nDn = chkLink(newO1, "dn");
+			var nLf = chkLink(newO1, "lf");
+			var nRt = chkLink(newO1, "rt");
+			if((nUp + nDn >= 2) || (nLf + nRt >= 2)){
+				canMatch = true;
+			}
+		} catch(e) {
+			// 如果检查出错，认为不能匹配
+		}
+	}
+	
+	if(!canMatch && newO2){
+		// 检查第二个方块交换后是否能形成匹配
+		try {
+			var nUp = chkLink(newO2, "up");
+			var nDn = chkLink(newO2, "dn");
+			var nLf = chkLink(newO2, "lf");
+			var nRt = chkLink(newO2, "rt");
+			if((nUp + nDn >= 2) || (nLf + nRt >= 2)){
+				canMatch = true;
+			}
+		} catch(e) {
+			// 如果检查出错，认为不能匹配
+		}
+	}
+	
+	// 恢复原来的内容
+	TD1.html(temp1);
+	TD2.html(temp2);
+	
+	return canMatch;
+}
+
+/**
 * 【实质】交换两个td中的棋子
 *@param TD1: 第1个封装的td对象
 *@param TD2: 第2个封装的td对象
