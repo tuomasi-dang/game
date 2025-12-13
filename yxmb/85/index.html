@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>美食消消乐 - 吃货专属闯关游戏</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 自定义配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FF6B6B',     // 主色调-珊瑚红
+            secondary: '#4ECDC4',   // 辅助色-薄荷绿
+            accent: '#FFD166',      // 强调色-柠檬黄
+            dark: '#292F36',        // 深色
+            light: '#F7F9FB',       // 浅色
+          },
+          fontFamily: {
+            game: ['"Ma Shan Zheng"', 'cursive', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义样式 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .game-cell {
+        @apply w-full h-full rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 shadow-md hover:scale-105 hover:shadow-lg relative;
+      }
+      .game-cell-selected {
+        @apply scale-95 shadow-inner ring-2 ring-primary ring-offset-2 bg-primary/10;
+      }
+      .cell-animation {
+        animation: pop 0.4s ease-in-out forwards;
+      }
+      .cell-swap {
+        animation: swap 0.3s ease-in-out forwards;
+      }
+      .score-popup {
+        animation: scoreUp 0.8s ease-out forwards;
+      }
+      .level-up {
+        animation: levelUp 1s ease-out forwards;
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+      .shake {
+        animation: shake 0.3s ease-in-out;
+      }
+      .hint-highlight {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      .countdown-warning {
+        animation: blink 1s ease-in-out infinite;
+      }
+      .particle {
+        position: absolute;
+        pointer-events: none;
+        border-radius: 50%;
+        z-index: 10;
+        animation: particle 0.8s ease-out forwards;
+      }
+      /* 修复网格布局核心样式 */
+      .game-grid-container {
+        @apply relative w-full max-w-md mx-auto;
+        aspect-ratio: 1/1; /* 严格保持正方形 */
+      }
+      .game-grid {
+        @apply absolute inset-0 grid grid-cols-6 gap-2;
+      }
+      /* 弹窗图片样式 */
+      .modal-img {
+        @apply w-full max-w-[250px] h-auto rounded-xl shadow-md mx-auto mb-4 object-cover;
+      }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.9; filter: brightness(1.2); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    
+    @keyframes swap {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes scoreUp {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-20px); opacity: 0; }
+    }
+    
+    @keyframes levelUp {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.8); }
+    }
+    
+    @keyframes blink {
+      0%, 100% { color: #FF6B6B; }
+      50% { color: #ff0000; }
+    }
+    
+    @keyframes particle {
+      0% { 
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 1; 
+      }
+      100% { 
+        transform: translate(var(--x), var(--y)) scale(0); 
+        opacity: 0; 
+      }
+    }
+    
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #FF6B6B;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff5252;
+    }
+  </style>
+  
+  <!-- 引入中文字体 -->
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-light to-secondary/20 min-h-screen font-game text-dark overflow-x-hidden">
+  <!-- 游戏加载界面 -->
+  <div id="loading-screen" class="fixed inset-0 flex flex-col items-center justify-center bg-white z-50 transition-opacity duration-500">
+    <div class="text-4xl md:text-6xl font-bold text-primary mb-6">美食消消乐</div>
+    <div class="w-64 h-4 bg-gray-200 rounded-full overflow-hidden">
+      <div id="loading-bar" class="h-full bg-primary w-0 transition-all duration-1500"></div>
+    </div>
+    <p class="mt-4 text-gray-600">加载美食中...🍜🍲🍗</p>
+  </div>
+
+  <!-- 游戏规则弹窗（新增图片） -->
+  <div id="rules-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl fade-in">
+      <div class="text-center mb-6">
+        <!-- 新增弹窗图片 -->
+        <img src="images/pic.jpg" alt="美食消消乐封面" class="modal-img">
+        <div class="text-4xl mb-4">📖 游戏规则</div>
+        <h2 class="text-2xl font-bold text-primary mb-2">美食消消乐</h2>
+      </div>
+      
+      <div class="space-y-4 text-left mb-8">
+        <div class="flex items-start">
+          <i class="fa fa-hand-pointer-o text-primary mt-1 mr-3 text-xl"></i>
+          <div>
+            <h4 class="font-bold">基本操作</h4>
+            <p class="text-gray-600">点击选中美食图标，再点击相邻图标交换位置，三个及以上相同美食连成一线即可消除</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fa fa-bullseye text-primary mt-1 mr-3 text-xl"></i>
+          <div>
+            <h4 class="font-bold">关卡目标</h4>
+            <p class="text-gray-600">每关需要达到指定的消除数量和分数目标才能通关</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fa fa-lightbulb-o text-primary mt-1 mr-3 text-xl"></i>
+          <div>
+            <h4 class="font-bold">提示功能</h4>
+            <p class="text-gray-600">点击提示按钮可高亮显示可消除组合（初始3次）</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fa fa-random text-primary mt-1 mr-3 text-xl"></i>
+          <div>
+            <h4 class="font-bold">洗牌功能</h4>
+            <p class="text-gray-600">点击洗牌按钮重新排列美食（初始2次）</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fa fa-clock-o text-primary mt-1 mr-3 text-xl"></i>
+          <div>
+            <h4 class="font-bold">倒计时</h4>
+            <p class="text-gray-600">每关有时间限制，需在倒计时结束前完成目标</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start">
+          <i class="fa fa-cutlery text-primary mt-1 mr-3 text-xl"></i>
+          <div>
+            <h4 class="font-bold">关卡特色</h4>
+            <p class="text-gray-600">每个关卡有不同的美食组合和难度，越往后挑战越大！</p>
+          </div>
+        </div>
+      </div>
+      
+      <button id="start-game-btn" class="w-full bg-primary hover:bg-primary/90 text-white rounded-lg px-6 py-3 shadow hover:shadow-lg transition-all text-lg font-bold">
+        开始游戏
+      </button>
+    </div>
+  </div>
+
+  <!-- 游戏主界面 -->
+  <div id="game-container" class="container mx-auto px-4 py-6 max-w-5xl hidden">
+    <!-- 游戏头部 -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-6 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+      <div class="flex items-center mb-4 md:mb-0">
+        <div class="text-3xl md:text-4xl font-bold text-primary mr-2">美食消消乐</div>
+        <span class="bg-accent text-dark px-3 py-1 rounded-full text-sm font-bold">吃货版</span>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-4 items-center">
+        <!-- 倒计时 -->
+        <div class="bg-red-500 text-white rounded-lg shadow p-3 flex items-center min-w-[120px] justify-center">
+          <i class="fa fa-clock-o mr-2"></i>
+          <span id="countdown" class="text-xl font-bold">60</span>
+          <span class="ml-1">秒</span>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-3 flex items-center">
+          <i class="fa fa-star text-accent mr-2"></i>
+          <span class="font-bold">分数:</span>
+          <span id="score" class="ml-2 text-xl font-bold text-primary">0</span>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-3 flex items-center">
+          <i class="fa fa-map-marker text-primary mr-2"></i>
+          <span class="font-bold">关卡:</span>
+          <span id="level" class="ml-2 text-xl font-bold text-primary">1</span>
+        </div>
+        
+        <button id="restart-btn" class="bg-primary hover:bg-primary/90 text-white rounded-lg px-4 py-2 shadow hover:shadow-lg transition-all flex items-center">
+          <i class="fa fa-refresh mr-2"></i>
+          <span>重新开始</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 游戏内容区 -->
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- 游戏面板 -->
+      <div class="flex-1 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+        <!-- 关卡目标 -->
+        <div id="level-goal" class="mb-4 p-3 bg-primary/10 rounded-lg border-l-4 border-primary">
+          <h3 class="font-bold text-lg mb-2">
+            <i class="fa fa-bullseye text-primary mr-2"></i>第<span id="goal-level">1</span>关目标
+          </h3>
+          <div id="goal-text" class="text-gray-700">
+            <p class="mb-1">消除<span id="goal-count" class="text-primary font-bold">30</span>个美食，达到<span id="goal-score" class="text-primary font-bold">500</span>分</p>
+            <p id="level-feature" class="text-sm text-secondary font-bold">✨ 特色：经典螺蛳粉套餐</p>
+          </div>
+        </div>
+        
+        <!-- 游戏网格容器（修复核心：独立容器保持正方形） -->
+        <div class="game-grid-container">
+          <div id="game-grid" class="game-grid"></div>
+        </div>
+        
+        <!-- 游戏控制 -->
+        <div class="mt-6 flex justify-center gap-4">
+          <button id="hint-btn" class="bg-secondary hover:bg-secondary/90 text-white rounded-lg px-4 py-2 shadow hover:shadow-lg transition-all flex items-center">
+            <i class="fa fa-lightbulb-o mr-2"></i>
+            <span>提示</span>
+            <span id="hint-count" class="ml-2 bg-white text-secondary rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
+          </button>
+          
+          <button id="shuffle-btn" class="bg-accent hover:bg-accent/90 text-dark rounded-lg px-4 py-2 shadow hover:shadow-lg transition-all flex items-center">
+            <i class="fa fa-random mr-2"></i>
+            <span>洗牌</span>
+            <span id="shuffle-count" class="ml-2 bg-white text-accent rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 侧边栏 -->
+      <div class="lg:w-80 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+        <!-- 关卡列表 -->
+        <h3 class="font-bold text-xl mb-4 border-b border-gray-200 pb-2">
+          <i class="fa fa-list text-primary mr-2"></i>关卡列表
+        </h3>
+        
+        <div id="levels-list" class="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pb-2">
+          <!-- 关卡按钮会动态生成 -->
+        </div>
+        
+        <!-- 当前关卡美食图鉴 -->
+        <h3 class="font-bold text-xl mt-6 mb-4 border-b border-gray-200 pb-2">
+          <i class="fa fa-book text-primary mr-2"></i>本关美食
+        </h3>
+        
+        <div id="current-food-list" class="grid grid-cols-3 gap-2">
+          <!-- 当前关卡美食会动态生成 -->
+        </div>
+        
+        <!-- 全部美食图鉴 -->
+        <h3 class="font-bold text-xl mt-6 mb-4 border-b border-gray-200 pb-2">
+          <i class="fa fa-book text-primary mr-2"></i>美食大全
+        </h3>
+        
+        <div class="grid grid-cols-4 gap-1 max-h-[150px] overflow-y-auto">
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍜</div>
+            <div class="text-xs">螺蛳粉</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍲</div>
+            <div class="text-xs">火锅</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍝</div>
+            <div class="text-xs">热干面</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍗</div>
+            <div class="text-xs">鸡块面</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍚</div>
+            <div class="text-xs">炒饭</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🥟</div>
+            <div class="text-xs">饺子</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍢</div>
+            <div class="text-xs">串串</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍡</div>
+            <div class="text-xs">关东煮</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍤</div>
+            <div class="text-xs">虾饺</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🥘</div>
+            <div class="text-xs">煲仔饭</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍛</div>
+            <div class="text-xs">咖喱饭</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🥠</div>
+            <div class="text-xs">烧卖</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍙</div>
+            <div class="text-xs">饭团</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🥪</div>
+            <div class="text-xs">三明治</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🥧</div>
+            <div class="text-xs">蛋挞</div>
+          </div>
+          <div class="bg-light rounded-lg p-1 text-center">
+            <div class="text-xl mb-1">🍮</div>
+            <div class="text-xs">布丁</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 游戏底部 -->
+    <footer class="mt-8 text-center text-gray-600 text-sm">
+      <p>🍜 美食消消乐 © 2025 吃货（李北）专属游戏 🍲</p>
+    </footer>
+  </div>
+
+  <!-- 关卡完成弹窗（新增图片） -->
+  <div id="level-complete-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl level-up">
+      <div class="text-center">
+        <!-- 新增弹窗图片 -->
+        <img src="images/pic.jpg" alt="关卡完成" class="modal-img">
+        <div class="text-6xl mb-4">🎉</div>
+        <h2 class="text-3xl font-bold text-primary mb-2">关卡完成！</h2>
+        <p class="text-xl mb-4">恭喜你完成了第<span id="completed-level">1</span>关</p>
+        
+        <div class="flex justify-between mb-6 bg-light rounded-lg p-4">
+          <div>
+            <p class="text-gray-600">得分</p>
+            <p class="text-2xl font-bold text-primary" id="final-score">0</p>
+          </div>
+          <div>
+            <p class="text-gray-600">目标</p>
+            <p class="text-2xl font-bold text-secondary" id="target-score">0</p>
+          </div>
+          <div>
+            <p class="text-gray-600">剩余时间</p>
+            <p class="text-2xl font-bold text-accent" id="remaining-time">0</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-4 justify-center">
+          <button id="play-next-btn" class="bg-primary hover:bg-primary/90 text-white rounded-lg px-6 py-3 shadow hover:shadow-lg transition-all text-lg font-bold">
+            下一关
+          </button>
+          <button id="play-again-btn" class="bg-gray-200 hover:bg-gray-300 text-dark rounded-lg px-6 py-3 shadow hover:shadow-lg transition-all text-lg font-bold">
+            重玩
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏失败弹窗（新增图片） -->
+  <div id="game-over-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl fade-in">
+      <div class="text-center">
+        <!-- 新增弹窗图片 -->
+        <img src="images/pic.jpg" alt="游戏结束" class="modal-img">
+        <div class="text-6xl mb-4">😕</div>
+        <h2 class="text-3xl font-bold text-primary mb-2">游戏结束</h2>
+        <p class="text-xl mb-4">未能完成第<span id="failed-level">1</span>关目标</p>
+        
+        <div class="flex justify-between mb-6 bg-light rounded-lg p-4">
+          <div>
+            <p class="text-gray-600">最终得分</p>
+            <p class="text-2xl font-bold text-primary" id="game-over-score">0</p>
+          </div>
+          <div>
+            <p class="text-gray-600">目标分数</p>
+            <p class="text-2xl font-bold text-secondary" id="game-over-target">0</p>
+          </div>
+          <div>
+            <p class="text-gray-600">消除数量</p>
+            <p class="text-2xl font-bold text-accent" id="game-over-count">0</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-4 justify-center">
+          <button id="retry-btn" class="bg-primary hover:bg-primary/90 text-white rounded-lg px-6 py-3 shadow hover:shadow-lg transition-all text-lg font-bold">
+            重新尝试
+          </button>
+          <button id="back-to-menu-btn" class="bg-gray-200 hover:bg-gray-300 text-dark rounded-lg px-6 py-3 shadow hover:shadow-lg transition-all text-lg font-bold">
+            返回菜单
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 胜利弹窗（通关）（新增图片） -->
+  <div id="victory-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-40 hidden">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl level-up">
+      <div class="text-center">
+        <!-- 新增弹窗图片 -->
+        <img src="images/pic.jpg" alt="恭喜通关" class="modal-img">
+        <div class="text-6xl mb-4">🏆</div>
+        <h2 class="text-3xl font-bold text-primary mb-2">恭喜通关！</h2>
+        <p class="text-xl mb-4">你已经完成了所有关卡，成为美食消消乐大师！</p>
+        
+        <div class="mb-6 bg-light rounded-lg p-4">
+          <p class="text-gray-600">总得分</p>
+          <p class="text-3xl font-bold text-primary" id="total-score">0</p>
+        </div>
+        
+        <button id="play-again-all-btn" class="bg-primary hover:bg-primary/90 text-white rounded-lg px-6 py-3 shadow hover:shadow-lg transition-all text-lg font-bold">
+          重新开始游戏
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 扩展的美食类型库
+    const FOOD_LIBRARY = {
+      // 中式主食
+      noodles: [
+        { icon: '🍜', name: '螺蛳粉', color: '#FF6B6B', category: '主食' },
+        { icon: '🍲', name: '火锅', color: '#4ECDC4', category: '主食' },
+        { icon: '🍝', name: '热干面', color: '#FFD166', category: '主食' },
+        { icon: '🍗', name: '鸡块面', color: '#9370DB', category: '主食' },
+        { icon: '🍚', name: '炒饭', color: '#F08080', category: '主食' },
+        { icon: '🥟', name: '饺子', color: '#32CD32', category: '主食' },
+      ],
+      // 小吃零食
+      snacks: [
+        { icon: '🍢', name: '串串', color: '#FF8C00', category: '小吃' },
+        { icon: '🍡', name: '关东煮', color: '#FF69B4', category: '小吃' },
+        { icon: '🍤', name: '虾饺', color: '#4169E1', category: '小吃' },
+        { icon: '🥠', name: '烧卖', color: '#DAA520', category: '小吃' },
+        { icon: '🍙', name: '饭团', color: '#98FB98', category: '小吃' },
+        { icon: '🥘', name: '煲仔饭', color: '#CD853F', category: '小吃' },
+      ],
+      // 西式美食
+      western: [
+        { icon: '🍛', name: '咖喱饭', color: '#FFA500', category: '西式' },
+        { icon: '🥪', name: '三明治', color: '#8B4513', category: '西式' },
+        { icon: '🍕', name: '披萨', color: '#DC143C', category: '西式' },
+        { icon: '🍔', name: '汉堡', color: '#B8860B', category: '西式' },
+        { icon: '🍟', name: '薯条', color: '#FFD700', category: '西式' },
+        { icon: '🌭', name: '热狗', color: '#FF4500', category: '西式' },
+      ],
+      // 甜点饮品
+      desserts: [
+        { icon: '🥧', name: '蛋挞', color: '#FFB6C1', category: '甜点' },
+        { icon: '🍮', name: '布丁', color: '#E6E6FA', category: '甜点' },
+        { icon: '🍰', name: '蛋糕', color: '#FFC0CB', category: '甜点' },
+        { icon: '🍧', name: '冰淇淋', color: '#ADD8E6', category: '甜点' },
+        { icon: '🍵', name: '奶茶', color: '#D2B48C', category: '甜点' },
+        { icon: '🥤', name: '汽水', color: '#00BFFF', category: '甜点' },
+      ]
+    };
+
+    // 游戏配置 - 每个关卡有独特的美食组合
+    const GAME_CONFIG = {
+      gridSize: 6,          // 网格大小（固定6x6）
+      levels: [
+        // 第1关 - 经典螺蛳粉套餐
+        { 
+          goalCount: 30, 
+          goalScore: 500, 
+          timeLimit: 60,
+          foodCategories: ['noodles'],
+          foodCount: 4,
+          feature: '经典螺蛳粉套餐'
+        },
+        // 第2关 - 特色小吃
+        { 
+          goalCount: 35, 
+          goalScore: 700, 
+          timeLimit: 65,
+          foodCategories: ['noodles', 'snacks'],
+          foodCount: 5,
+          feature: '南方特色小吃'
+        },
+        // 第3关 - 中西结合
+        { 
+          goalCount: 40, 
+          goalScore: 900, 
+          timeLimit: 70,
+          foodCategories: ['noodles', 'western'],
+          foodCount: 5,
+          feature: '中西美食结合'
+        },
+        // 第4关 - 小吃盛宴
+        { 
+          goalCount: 45, 
+          goalScore: 1100, 
+          timeLimit: 70,
+          foodCategories: ['snacks'],
+          foodCount: 6,
+          feature: '小吃街盛宴'
+        },
+        // 第5关 - 甜品时间
+        { 
+          goalCount: 50, 
+          goalScore: 1300, 
+          timeLimit: 75,
+          foodCategories: ['desserts'],
+          foodCount: 5,
+          feature: '甜蜜甜品时间'
+        },
+        // 第6关 - 环球美食
+        { 
+          goalCount: 55, 
+          goalScore: 1500, 
+          timeLimit: 75,
+          foodCategories: ['western', 'desserts'],
+          foodCount: 6,
+          feature: '环球美食之旅'
+        },
+        // 第7关 - 全能挑战
+        { 
+          goalCount: 60, 
+          goalScore: 1800, 
+          timeLimit: 80,
+          foodCategories: ['noodles', 'snacks', 'western'],
+          foodCount: 6,
+          feature: '中式全能挑战'
+        },
+        // 第8关 - 吃货天堂
+        { 
+          goalCount: 70, 
+          goalScore: 2200, 
+          timeLimit: 80,
+          foodCategories: ['noodles', 'snacks', 'desserts'],
+          foodCount: 6,
+          feature: '吃货的天堂'
+        },
+        // 第9关 - 终极混搭
+        { 
+          goalCount: 80, 
+          goalScore: 2600, 
+          timeLimit: 85,
+          foodCategories: ['noodles', 'snacks', 'western', 'desserts'],
+          foodCount: 6,
+          feature: '终极美食混搭'
+        },
+        // 第10关 - 美食大师
+        { 
+          goalCount: 90, 
+          goalScore: 3000, 
+          timeLimit: 90,
+          foodCategories: ['noodles', 'snacks', 'western', 'desserts'],
+          foodCount: 8,
+          feature: '美食大师终极挑战'
+        },
+      ],
+      basePoints: 10,       // 基础分数
+      hintCount: 3,         // 初始提示次数
+      shuffleCount: 2       // 初始洗牌次数
+    };
+
+    // 游戏状态
+    let gameState = {
+      grid: [],             // 游戏网格数据（始终保持6x6）
+      selectedCell: null,   // 选中的格子
+      score: 0,             // 当前分数
+      level: 1,             // 当前关卡
+      eliminatedCount: 0,   // 已消除数量
+      hintCount: GAME_CONFIG.hintCount,
+      shuffleCount: GAME_CONFIG.shuffleCount,
+      isAnimating: false,   // 是否正在动画中
+      unlockedLevels: 1,    // 已解锁关卡
+      countdown: 0,         // 当前倒计时
+      countdownTimer: null, // 倒计时定时器
+      gamePaused: false,    // 游戏是否暂停
+      currentFoodTypes: []  // 当前关卡可用的美食类型
+    };
+
+    // DOM 元素
+    const elements = {
+      loadingScreen: document.getElementById('loading-screen'),
+      loadingBar: document.getElementById('loading-bar'),
+      gameContainer: document.getElementById('game-container'),
+      gameGrid: document.getElementById('game-grid'),
+      scoreDisplay: document.getElementById('score'),
+      levelDisplay: document.getElementById('level'),
+      goalLevel: document.getElementById('goal-level'),
+      goalCount: document.getElementById('goal-count'),
+      goalScore: document.getElementById('goal-score'),
+      levelFeature: document.getElementById('level-feature'),
+      hintCount: document.getElementById('hint-count'),
+      shuffleCount: document.getElementById('shuffle-count'),
+      restartBtn: document.getElementById('restart-btn'),
+      hintBtn: document.getElementById('hint-btn'),
+      shuffleBtn: document.getElementById('shuffle-btn'),
+      levelsList: document.getElementById('levels-list'),
+      currentFoodList: document.getElementById('current-food-list'),
+      levelCompleteModal: document.getElementById('level-complete-modal'),
+      gameOverModal: document.getElementById('game-over-modal'),
+      victoryModal: document.getElementById('victory-modal'),
+      completedLevel: document.getElementById('completed-level'),
+      finalScore: document.getElementById('final-score'),
+      targetScore: document.getElementById('target-score'),
+      remainingTime: document.getElementById('remaining-time'),
+      playNextBtn: document.getElementById('play-next-btn'),
+      playAgainBtn: document.getElementById('play-again-btn'),
+      failedLevel: document.getElementById('failed-level'),
+      gameOverScore: document.getElementById('game-over-score'),
+      gameOverTarget: document.getElementById('game-over-target'),
+      gameOverCount: document.getElementById('game-over-count'),
+      retryBtn: document.getElementById('retry-btn'),
+      backToMenuBtn: document.getElementById('back-to-menu-btn'),
+      totalScore: document.getElementById('total-score'),
+      playAgainAllBtn: document.getElementById('play-again-all-btn'),
+      rulesModal: document.getElementById('rules-modal'),
+      startGameBtn: document.getElementById('start-game-btn'),
+      countdown: document.getElementById('countdown')
+    };
+
+    // 创建粒子效果
+    function createParticles(x, y, color, count = 10) {
+      for (let i = 0; i < count; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        
+        // 随机粒子属性
+        const size = Math.random() * 8 + 4;
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 40 + 20;
+        
+        // 设置粒子样式
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.backgroundColor = color;
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        particle.style.zIndex = '100'; // 提升层级但不影响布局
+        
+        // 设置粒子运动轨迹
+        particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+        
+        document.body.appendChild(particle);
+        
+        // 移除粒子
+        setTimeout(() => {
+          particle.remove();
+        }, 800);
+      }
+    }
+
+    // 获取当前关卡的美食类型
+    function getCurrentLevelFoodTypes() {
+      const levelConfig = GAME_CONFIG.levels[gameState.level - 1];
+      let allFoods = [];
+      
+      // 收集指定分类的所有美食
+      levelConfig.foodCategories.forEach(category => {
+        allFoods = allFoods.concat(FOOD_LIBRARY[category]);
+      });
+      
+      // 随机选择指定数量的美食
+      const shuffled = [...allFoods].sort(() => 0.5 - Math.random());
+      const selectedFoods = shuffled.slice(0, levelConfig.foodCount);
+      
+      gameState.currentFoodTypes = selectedFoods;
+      return selectedFoods;
+    }
+
+    // 渲染当前关卡的美食列表
+    function renderCurrentFoodList() {
+      elements.currentFoodList.innerHTML = '';
+      
+      gameState.currentFoodTypes.forEach(food => {
+        const foodItem = document.createElement('div');
+        foodItem.className = 'bg-light rounded-lg p-2 text-center';
+        foodItem.innerHTML = `
+          <div class="text-2xl mb-1" style="color: ${food.color}">${food.icon}</div>
+          <div class="text-xs font-bold">${food.name}</div>
+        `;
+        elements.currentFoodList.appendChild(foodItem);
+      });
+    }
+
+    // 初始化加载界面
+    function initLoading() {
+      // 模拟加载进度
+      let progress = 0;
+      const loadingInterval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(loadingInterval);
+          
+          // 加载完成，显示规则弹窗
+          setTimeout(() => {
+            elements.loadingScreen.classList.add('opacity-0');
+            setTimeout(() => {
+              elements.loadingScreen.classList.add('hidden');
+              elements.rulesModal.classList.remove('hidden');
+            }, 500);
+          }, 500);
+        }
+        elements.loadingBar.style.width = `${progress}%`;
+      }, 100);
+    }
+
+    // 初始化游戏网格（确保始终6x6）
+    function initGrid() {
+      // 获取当前关卡的美食类型
+      const foodTypes = getCurrentLevelFoodTypes();
+      
+      const grid = [];
+      // 强制填充6x6网格，确保没有空行
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        grid[row] = [];
+        for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+          const randomType = foodTypes[
+            Math.floor(Math.random() * foodTypes.length)
+          ];
+          grid[row][col] = {
+            type: randomType,
+            row,
+            col,
+            element: null
+          };
+        }
+      }
+      
+      // 确保初始网格有可消除的组合
+      let attempts = 0;
+      while (!hasValidMoves(grid) && attempts < 10) {
+        reshuffleGrid(grid);
+        attempts++;
+      }
+      
+      gameState.grid = grid;
+      renderGrid();
+      renderCurrentFoodList();
+    }
+
+    // 渲染游戏网格（核心修复：强制渲染6x6完整网格）
+    function renderGrid() {
+      // 清空网格但保持容器结构
+      elements.gameGrid.innerHTML = '';
+      
+      // 强制渲染6行6列，确保布局完整
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+          const cell = gameState.grid[row][col];
+          const cellElement = document.createElement('div');
+          cellElement.className = 'game-cell';
+          cellElement.style.backgroundColor = `${cell.type.color}10`;
+          cellElement.innerHTML = `<span class="text-2xl" style="color: ${cell.type.color}">${cell.type.icon}</span>`;
+          cellElement.dataset.row = row;
+          cellElement.dataset.col = col;
+          
+          // 点击事件
+          cellElement.addEventListener('click', () => handleCellClick(row, col));
+          
+          elements.gameGrid.appendChild(cellElement);
+          cell.element = cellElement;
+        }
+      }
+    }
+
+    // 处理格子点击
+    function handleCellClick(row, col) {
+      if (gameState.isAnimating || gameState.gamePaused) return;
+      
+      const cell = gameState.grid[row][col];
+      
+      // 如果已经选中了一个格子
+      if (gameState.selectedCell) {
+        const selectedRow = gameState.selectedCell.row;
+        const selectedCol = gameState.selectedCell.col;
+        
+        // 取消选中同一个格子
+        if (selectedRow === row && selectedCol === col) {
+          gameState.selectedCell.element.classList.remove('game-cell-selected');
+          gameState.selectedCell = null;
+          return;
+        }
+        
+        // 检查是否相邻
+        if (isAdjacent(selectedRow, selectedCol, row, col)) {
+          // 添加交换动画
+          gameState.selectedCell.element.classList.add('cell-swap');
+          cell.element.classList.add('cell-swap');
+          
+          // 交换格子
+          swapCells(selectedRow, selectedCol, row, col);
+          
+          // 检查是否形成消除组合
+          const matches = findMatches();
+          if (matches.length > 0) {
+            // 有消除组合，保持交换
+            setTimeout(() => {
+              gameState.selectedCell.element.classList.remove('game-cell-selected', 'cell-swap');
+              cell.element.classList.remove('cell-swap');
+              gameState.selectedCell = null;
+              processMatches(matches);
+            }, 300);
+          } else {
+            // 没有消除组合，交换回来
+            setTimeout(() => {
+              swapCells(row, col, selectedRow, selectedCol);
+              gameState.selectedCell.element.classList.remove('game-cell-selected', 'cell-swap');
+              cell.element.classList.remove('cell-swap');
+              gameState.selectedCell = null;
+              // 抖动效果表示无效移动
+              cell.element.classList.add('shake');
+              gameState.selectedCell.element.classList.add('shake');
+              setTimeout(() => {
+                cell.element.classList.remove('shake');
+                gameState.selectedCell.element.classList.remove('shake');
+              }, 300);
+            }, 300);
+          }
+        } else {
+          // 不相邻，切换选中状态
+          gameState.selectedCell.element.classList.remove('game-cell-selected');
+          cell.element.classList.add('game-cell-selected');
+          gameState.selectedCell = cell;
+        }
+      } else {
+        // 选中第一个格子
+        cell.element.classList.add('game-cell-selected');
+        gameState.selectedCell = cell;
+      }
+    }
+
+    // 检查是否相邻
+    function isAdjacent(row1, col1, row2, col2) {
+      const rowDiff = Math.abs(row1 - row2);
+      const colDiff = Math.abs(col1 - col2);
+      return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+    }
+
+    // 交换两个格子
+    function swapCells(row1, col1, row2, col2) {
+      const grid = gameState.grid;
+      const temp = grid[row1][col1];
+      
+      // 更新DOM（只更新内容，不破坏网格结构）
+      const tempIcon = grid[row1][col1].element.innerHTML;
+      grid[row1][col1].element.innerHTML = grid[row2][col2].element.innerHTML;
+      grid[row2][col2].element.innerHTML = tempIcon;
+      
+      // 更新背景色
+      grid[row1][col1].element.style.backgroundColor = `${grid[row2][col2].type.color}10`;
+      grid[row2][col2].element.style.backgroundColor = `${temp.type.color}10`;
+      
+      // 更新数据
+      grid[row1][col1] = grid[row2][col2];
+      grid[row2][col2] = temp;
+      
+      // 更新行列信息
+      grid[row1][col1].row = row1;
+      grid[row1][col1].col = col1;
+      grid[row2][col2].row = row2;
+      grid[row2][col2].col = col2;
+    }
+
+    // 查找所有可消除的组合
+    function findMatches() {
+      const grid = gameState.grid;
+      const matches = [];
+      const matched = new Set();
+      
+      // 检查水平匹配
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        for (let col = 0; col < GAME_CONFIG.gridSize - 2; col++) {
+          const current = grid[row][col];
+          if (current && current.type.icon === grid[row][col+1].type.icon && 
+              current.type.icon === grid[row][col+2].type.icon) {
+            
+            // 找到匹配，检查是否可以扩展
+            let matchLength = 3;
+            while (col + matchLength < GAME_CONFIG.gridSize && 
+                   grid[row][col + matchLength] &&
+                   grid[row][col + matchLength].type.icon === current.type.icon) {
+              matchLength++;
+            }
+            
+            // 记录匹配的格子
+            const match = [];
+            for (let i = 0; i < matchLength; i++) {
+              const key = `${row}-${col+i}`;
+              if (!matched.has(key)) {
+                matched.add(key);
+                match.push(grid[row][col+i]);
+              }
+            }
+            
+            if (match.length >= 3) {
+              matches.push(match);
+            }
+            
+            col += matchLength - 1;
+          }
+        }
+      }
+      
+      // 检查垂直匹配
+      for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+        for (let row = 0; row < GAME_CONFIG.gridSize - 2; row++) {
+          const current = grid[row][col];
+          if (current && current.type.icon === grid[row+1][col].type.icon && 
+              current.type.icon === grid[row+2][col].type.icon) {
+            
+            // 找到匹配，检查是否可以扩展
+            let matchLength = 3;
+            while (row + matchLength < GAME_CONFIG.gridSize && 
+                   grid[row + matchLength] &&
+                   grid[row + matchLength][col] &&
+                   grid[row + matchLength][col].type.icon === current.type.icon) {
+              matchLength++;
+            }
+            
+            // 记录匹配的格子
+            const match = [];
+            for (let i = 0; i < matchLength; i++) {
+              const key = `${row+i}-${col}`;
+              if (!matched.has(key)) {
+                matched.add(key);
+                match.push(grid[row+i][col]);
+              }
+            }
+            
+            if (match.length >= 3) {
+              matches.push(match);
+            }
+            
+            row += matchLength - 1;
+          }
+        }
+      }
+      
+      return matches;
+    }
+
+    // 处理消除匹配（核心修复：重构填充逻辑，不破坏网格结构）
+    function processMatches(matches) {
+      gameState.isAnimating = true;
+      pauseGame(true);
+      
+      // 计算总分
+      let totalPoints = 0;
+      matches.forEach(match => {
+        const matchPoints = GAME_CONFIG.basePoints * match.length;
+        totalPoints += matchPoints;
+        
+        // 添加消除动画和粒子效果
+        match.forEach(cell => {
+          cell.element.classList.add('cell-animation');
+          // 创建粒子效果
+          const rect = cell.element.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          createParticles(x, y, cell.type.color);
+        });
+      });
+      
+      // 更新分数和消除计数
+      gameState.score += totalPoints;
+      gameState.eliminatedCount += matches.flat().length;
+      
+      // 更新分数显示
+      updateScoreDisplay();
+      
+      // 显示分数弹窗
+      showScorePopup(totalPoints);
+      
+      // 立即检查关卡完成
+      const levelCompleted = checkLevelCompletionImmediate();
+      if (levelCompleted) {
+        gameState.isAnimating = false;
+        pauseGame(false);
+        return;
+      }
+      
+      // 等待动画完成后重构网格（核心修复：直接重构而非动态下落）
+      setTimeout(() => {
+        // 1. 收集所有非空单元格
+        const nonEmptyCells = [];
+        for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+          for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+            if (!matches.flat().some(cell => cell.row === row && cell.col === col)) {
+              nonEmptyCells.push(gameState.grid[row][col]);
+            }
+          }
+        }
+        
+        // 2. 重构6x6网格（关键修复：确保填满所有格子）
+        const foodTypes = gameState.currentFoodTypes;
+        let cellIndex = 0;
+        
+        for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+          // 先填充列的底部
+          const columnCells = [];
+          
+          // 收集当前列的非空单元格
+          for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+            if (!matches.flat().some(cell => cell.row === row && cell.col === col)) {
+              columnCells.push(gameState.grid[row][col]);
+            }
+          }
+          
+          // 填充空白位置（从下往上）
+          for (let row = GAME_CONFIG.gridSize - 1; row >= 0; row--) {
+            if (columnCells.length > 0) {
+              const cell = columnCells.pop();
+              gameState.grid[row][col] = {
+                type: cell.type,
+                row,
+                col,
+                element: null
+              };
+            } else {
+              // 填充新的随机美食
+              gameState.grid[row][col] = {
+                type: foodTypes[Math.floor(Math.random() * foodTypes.length)],
+                row,
+                col,
+                element: null
+              };
+            }
+          }
+        }
+        
+        // 3. 重新渲染完整网格，确保6x6结构
+        renderGrid();
+        
+        // 4. 检查连锁消除
+        setTimeout(() => {
+          const newMatches = findMatches();
+          if (newMatches.length > 0) {
+            // 连锁消除
+            processMatches(newMatches);
+          } else {
+            // 检查是否还有有效移动
+            if (!hasValidMoves(gameState.grid)) {
+              // 没有有效移动，自动洗牌
+              if (gameState.shuffleCount > 0) {
+                showShuffleNotification();
+                reshuffleGrid(gameState.grid);
+                renderGrid();
+                gameState.shuffleCount--;
+                elements.shuffleCount.textContent = gameState.shuffleCount;
+              } else {
+                showGameOver();
+              }
+            }
+            
+            gameState.isAnimating = false;
+            pauseGame(false);
+          }
+        }, 300);
+        
+      }, 400);
+    }
+
+    // 立即检查关卡完成状态
+    function checkLevelCompletionImmediate() {
+      const currentLevelConfig = GAME_CONFIG.levels[gameState.level - 1];
+      
+      console.log('关卡检查:', {
+        level: gameState.level,
+        eliminatedCount: gameState.eliminatedCount,
+        goalCount: currentLevelConfig.goalCount,
+        score: gameState.score,
+        goalScore: currentLevelConfig.goalScore,
+        timeLeft: gameState.countdown
+      });
+      
+      // 修复：同时满足消除数量和分数目标，且还有剩余时间
+      if (gameState.eliminatedCount >= currentLevelConfig.goalCount && 
+          gameState.score >= currentLevelConfig.goalScore &&
+          gameState.countdown > 0) {
+        
+        // 关卡完成
+        pauseGame(true);
+        
+        if (gameState.level < GAME_CONFIG.levels.length) {
+          // 更新解锁关卡
+          if (gameState.level >= gameState.unlockedLevels) {
+            gameState.unlockedLevels = gameState.level + 1;
+          }
+          
+          // 显示关卡完成弹窗
+          elements.remainingTime.textContent = gameState.countdown;
+          elements.completedLevel.textContent = gameState.level;
+          elements.finalScore.textContent = gameState.score;
+          elements.targetScore.textContent = currentLevelConfig.goalScore;
+          elements.levelCompleteModal.classList.remove('hidden');
+        } else {
+          // 所有关卡完成
+          elements.totalScore.textContent = gameState.score;
+          elements.victoryModal.classList.remove('hidden');
+        }
+        
+        // 清除倒计时
+        if (gameState.countdownTimer) {
+          clearInterval(gameState.countdownTimer);
+        }
+        
+        return true; // 关卡已完成
+      }
+      
+      return false; // 关卡未完成
+    }
+
+    // 显示分数弹窗
+    function showScorePopup(points) {
+      const popup = document.createElement('div');
+      popup.className = 'score-popup fixed text-primary font-bold text-xl';
+      popup.textContent = `+${points}`;
+      
+      // 定位到游戏网格中心
+      const gridRect = elements.gameGrid.getBoundingClientRect();
+      popup.style.left = `${gridRect.left + gridRect.width/2}px`;
+      popup.style.top = `${gridRect.top + gridRect.height/2}px`;
+      popup.style.transform = 'translate(-50%, -50%)';
+      popup.style.pointerEvents = 'none';
+      popup.style.zIndex = '10';
+      
+      document.body.appendChild(popup);
+      
+      // 移除弹窗
+      setTimeout(() => {
+        popup.remove();
+      }, 800);
+    }
+
+    // 检查是否有有效移动
+    function hasValidMoves(grid) {
+      // 复制网格进行检查
+      const tempGrid = JSON.parse(JSON.stringify(grid));
+      
+      // 检查所有可能的交换
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+          if (!tempGrid[row][col]) continue;
+          
+          // 检查右侧交换
+          if (col < GAME_CONFIG.gridSize - 1 && tempGrid[row][col+1]) {
+            // 交换
+            const temp = tempGrid[row][col];
+            tempGrid[row][col] = tempGrid[row][col+1];
+            tempGrid[row][col+1] = temp;
+            
+            // 检查匹配
+            if (findMatchesInGrid(tempGrid).length > 0) {
+              return true;
+            }
+            
+            // 交换回来
+            const temp2 = tempGrid[row][col];
+            tempGrid[row][col] = tempGrid[row][col+1];
+            tempGrid[row][col+1] = temp2;
+          }
+          
+          // 检查下方交换
+          if (row < GAME_CONFIG.gridSize - 1 && tempGrid[row+1][col]) {
+            // 交换
+            const temp = tempGrid[row][col];
+            tempGrid[row][col] = tempGrid[row+1][col];
+            tempGrid[row+1][col] = temp;
+            
+            // 检查匹配
+            if (findMatchesInGrid(tempGrid).length > 0) {
+              return true;
+            }
+            
+            // 交换回来
+            const temp2 = tempGrid[row][col];
+            tempGrid[row][col] = tempGrid[row+1][col];
+            tempGrid[row+1][col] = temp2;
+          }
+        }
+      }
+      
+      return false;
+    }
+
+    // 在指定网格中查找匹配
+    function findMatchesInGrid(grid) {
+      const matches = [];
+      const matched = new Set();
+      
+      // 检查水平匹配
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        for (let col = 0; col < GAME_CONFIG.gridSize - 2; col++) {
+          if (grid[row][col] && 
+              grid[row][col].type.icon === grid[row][col+1].type.icon && 
+              grid[row][col].type.icon === grid[row][col+2].type.icon) {
+            matches.push([grid[row][col], grid[row][col+1], grid[row][col+2]]);
+          }
+        }
+      }
+      
+      // 检查垂直匹配
+      for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+        for (let row = 0; row < GAME_CONFIG.gridSize - 2; row++) {
+          if (grid[row][col] && 
+              grid[row][col].type.icon === grid[row+1][col].type.icon && 
+              grid[row][col].type.icon === grid[row+2][col].type.icon) {
+            matches.push([grid[row][col], grid[row+1][col], grid[row+2][col]]);
+          }
+        }
+      }
+      
+      return matches;
+    }
+
+    // 重新洗牌网格（确保6x6完整）
+    function reshuffleGrid(grid) {
+      const foodTypes = gameState.currentFoodTypes;
+      
+      // 重新随机填充整个网格
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+          grid[row][col] = {
+            type: foodTypes[Math.floor(Math.random() * foodTypes.length)],
+            row,
+            col,
+            element: null
+          };
+        }
+      }
+      
+      return grid;
+    }
+
+    // 更新分数显示
+    function updateScoreDisplay() {
+      elements.scoreDisplay.textContent = gameState.score;
+      elements.levelDisplay.textContent = gameState.level;
+      elements.goalLevel.textContent = gameState.level;
+      
+      const currentLevelConfig = GAME_CONFIG.levels[gameState.level - 1];
+      elements.goalCount.textContent = `${currentLevelConfig.goalCount} (已消除: ${gameState.eliminatedCount})`;
+      elements.goalScore.textContent = `${currentLevelConfig.goalScore} (当前: ${gameState.score})`;
+      elements.levelFeature.textContent = `✨ 特色：${currentLevelConfig.feature}`;
+      
+      // 更新倒计时样式
+      if (gameState.countdown <= 10) {
+        elements.countdown.classList.add('countdown-warning');
+      } else {
+        elements.countdown.classList.remove('countdown-warning');
+      }
+      elements.countdown.textContent = gameState.countdown;
+    }
+
+    // 初始化关卡列表
+    function initLevelsList() {
+      elements.levelsList.innerHTML = '';
+      
+      for (let i = 1; i <= GAME_CONFIG.levels.length; i++) {
+        const levelBtn = document.createElement('button');
+        levelBtn.className = `game-cell ${i === gameState.level ? 'bg-primary text-white' : 
+                               i <= gameState.unlockedLevels ? 'bg-secondary text-white' : 
+                               'bg-gray-200 text-gray-400 cursor-not-allowed'}`;
+        levelBtn.textContent = i;
+        
+        if (i <= gameState.unlockedLevels) {
+          levelBtn.addEventListener('click', () => {
+            if (i !== gameState.level && !gameState.isAnimating && !gameState.gamePaused) {
+              gameState.level = i;
+              resetGame(false);
+            }
+          });
+        } else {
+          levelBtn.disabled = true;
+        }
+        
+        elements.levelsList.appendChild(levelBtn);
+      }
+    }
+
+    // 初始化倒计时
+    function initCountdown() {
+      // 清除现有定时器
+      if (gameState.countdownTimer) {
+        clearInterval(gameState.countdownTimer);
+      }
+      
+      // 设置新的倒计时
+      const currentLevelConfig = GAME_CONFIG.levels[gameState.level - 1];
+      gameState.countdown = currentLevelConfig.timeLimit;
+      
+      // 更新显示
+      elements.countdown.textContent = gameState.countdown;
+      
+      // 启动倒计时
+      gameState.countdownTimer = setInterval(() => {
+        if (!gameState.gamePaused) {
+          gameState.countdown--;
+          elements.countdown.textContent = gameState.countdown;
+          
+          // 倒计时警告样式
+          if (gameState.countdown <= 10) {
+            elements.countdown.classList.add('countdown-warning');
+          }
+          
+          // 倒计时结束
+          if (gameState.countdown <= 0) {
+            clearInterval(gameState.countdownTimer);
+            // 检查是否完成目标
+            const currentLevelConfig = GAME_CONFIG.levels[gameState.level - 1];
+            if (gameState.eliminatedCount >= currentLevelConfig.goalCount && 
+                gameState.score >= currentLevelConfig.goalScore) {
+              // 刚好完成目标
+              checkLevelCompletionImmediate();
+            } else {
+              // 未完成目标
+              showGameOver();
+            }
+          }
+        }
+      }, 1000);
+    }
+
+    // 暂停/恢复游戏
+    function pauseGame(pause) {
+      gameState.gamePaused = pause;
+    }
+
+    // 重置游戏
+    function resetGame(fullReset = true) {
+      // 暂停当前倒计时
+      if (gameState.countdownTimer) {
+        clearInterval(gameState.countdownTimer);
+      }
+      
+      if (fullReset) {
+        gameState.score = 0;
+        gameState.eliminatedCount = 0;
+        gameState.hintCount = GAME_CONFIG.hintCount;
+        gameState.shuffleCount = GAME_CONFIG.shuffleCount;
+        elements.hintCount.textContent = gameState.hintCount;
+        elements.shuffleCount.textContent = gameState.shuffleCount;
+      } else {
+        gameState.eliminatedCount = 0;
+      }
+      
+      gameState.selectedCell = null;
+      gameState.gamePaused = false;
+      initGrid(); // 重新初始化完整网格
+      initCountdown();
+      updateScoreDisplay();
+      initLevelsList();
+    }
+
+    // 显示游戏结束弹窗
+    function showGameOver() {
+      pauseGame(true);
+      elements.failedLevel.textContent = gameState.level;
+      elements.gameOverScore.textContent = gameState.score;
+      elements.gameOverCount.textContent = `${gameState.eliminatedCount}`;
+      
+      const currentLevelConfig = GAME_CONFIG.levels[gameState.level - 1];
+      elements.gameOverTarget.textContent = currentLevelConfig.goalScore;
+      
+      elements.gameOverModal.classList.remove('hidden');
+    }
+
+    // 显示洗牌通知
+    function showShuffleNotification() {
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-accent text-dark px-4 py-2 rounded-lg shadow-lg score-popup z-50';
+      notification.textContent = `🔀 没有有效移动，自动洗牌 (剩余次数: ${gameState.shuffleCount-1})`;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 2000);
+    }
+
+    // 显示提示
+    function showHint() {
+      if (gameState.hintCount <= 0 || gameState.isAnimating || gameState.gamePaused) return;
+      
+      gameState.hintCount--;
+      elements.hintCount.textContent = gameState.hintCount;
+      
+      // 查找可交换的位置
+      const grid = gameState.grid;
+      let hintCells = null;
+      
+      // 检查所有可能的交换
+      outerLoop:
+      for (let row = 0; row < GAME_CONFIG.gridSize; row++) {
+        for (let col = 0; col < GAME_CONFIG.gridSize; col++) {
+          if (!grid[row][col]) continue;
+          
+          // 检查右侧交换
+          if (col < GAME_CONFIG.gridSize - 1 && grid[row][col+1]) {
+            // 临时保存原始数据
+            const original1 = { ...grid[row][col].type };
+            const original2 = { ...grid[row][col+1].type };
+            
+            // 临时交换用于检查
+            grid[row][col].type = original2;
+            grid[row][col+1].type = original1;
+            
+            // 检查匹配
+            if (findMatches().length > 0) {
+              hintCells = [
+                grid[row][col],
+                grid[row][col+1]
+              ];
+              // 恢复原始数据
+              grid[row][col].type = original1;
+              grid[row][col+1].type = original2;
+              break outerLoop;
+            }
+            
+            // 恢复原始数据
+            grid[row][col].type = original1;
+            grid[row][col+1].type = original2;
+          }
+          
+          // 检查下方交换
+          if (row < GAME_CONFIG.gridSize - 1 && grid[row+1][col]) {
+            // 临时保存原始数据
+            const original1 = { ...grid[row][col].type };
+            const original2 = { ...grid[row+1][col].type };
+            
+            // 临时交换用于检查
+            grid[row][col].type = original2;
+            grid[row+1][col].type = original1;
+            
+            // 检查匹配
+            if (findMatches().length > 0) {
+              hintCells = [
+                grid[row][col],
+                grid[row+1][col]
+              ];
+              // 恢复原始数据
+              grid[row][col].type = original1;
+              grid[row+1][col].type = original2;
+              break outerLoop;
+            }
+            
+            // 恢复原始数据
+            grid[row][col].type = original1;
+            grid[row+1][col].type = original2;
+          }
+        }
+      }
+      
+      // 高亮提示的格子
+      if (hintCells) {
+        hintCells.forEach(cell => {
+          cell.element.classList.add('hint-highlight');
+          
+          setTimeout(() => {
+            cell.element.classList.remove('hint-highlight');
+          }, 3000);
+        });
+        
+        // 播放提示音效
+        try {
+          const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-interface-hint-notification-911.mp3');
+          audio.volume = 0.5;
+          audio.play();
+        } catch (e) {
+          console.log('提示音效播放失败:', e);
+        }
+      } else {
+        // 没有找到可消除的组合
+        showShuffleNotification();
+        handleShuffle();
+      }
+    }
+
+    // 洗牌按钮处理
+    function handleShuffle() {
+      if (gameState.shuffleCount <= 0 || gameState.isAnimating || gameState.gamePaused) return;
+      
+      showShuffleNotification();
+      reshuffleGrid(gameState.grid);
+      renderGrid(); // 重新渲染完整网格
+      gameState.shuffleCount--;
+      elements.shuffleCount.textContent = gameState.shuffleCount;
+      
+      // 播放洗牌音效
+      try {
+        const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-fast-small-sweep-transition-166.mp3');
+        audio.volume = 0.5;
+        audio.play();
+      } catch (e) {
+        console.log('洗牌音效播放失败:', e);
+      }
+    }
+
+    // 事件监听
+    function initEventListeners() {
+      // 开始游戏按钮（规则弹窗）
+      elements.startGameBtn.addEventListener('click', () => {
+        elements.rulesModal.classList.add('hidden');
+        elements.gameContainer.classList.remove('hidden');
+                resetGame(true);
+      });
+      
+      // 重新开始按钮
+      elements.restartBtn.addEventListener('click', () => {
+        if (!gameState.isAnimating) {
+          resetGame(true);
+        }
+      });
+      
+      // 提示按钮
+      elements.hintBtn.addEventListener('click', showHint);
+      
+      // 洗牌按钮
+      elements.shuffleBtn.addEventListener('click', handleShuffle);
+      
+      // 下一关按钮
+      elements.playNextBtn.addEventListener('click', () => {
+        elements.levelCompleteModal.classList.add('hidden');
+        gameState.level++;
+        resetGame(true);
+        pauseGame(false);
+      });
+      
+      // 重玩当前关按钮
+      elements.playAgainBtn.addEventListener('click', () => {
+        elements.levelCompleteModal.classList.add('hidden');
+        resetGame(false);
+        pauseGame(false);
+      });
+      
+      // 重试按钮
+      elements.retryBtn.addEventListener('click', () => {
+        elements.gameOverModal.classList.add('hidden');
+        resetGame(false);
+        pauseGame(false);
+      });
+      
+      // 返回菜单按钮
+      elements.backToMenuBtn.addEventListener('click', () => {
+        elements.gameOverModal.classList.add('hidden');
+        gameState.level = 1;
+        resetGame(true);
+        pauseGame(false);
+      });
+      
+      // 重新开始所有关卡按钮
+      elements.playAgainAllBtn.addEventListener('click', () => {
+        elements.victoryModal.classList.add('hidden');
+        gameState.level = 1;
+        gameState.unlockedLevels = 1;
+        resetGame(true);
+        pauseGame(false);
+      });
+      
+      // 响应式调整（强制重渲染完整网格）
+      window.addEventListener('resize', () => {
+        if (!gameState.isAnimating && !gameState.gamePaused) {
+          renderGrid(); // 窗口调整后强制重渲染，避免布局错位
+        }
+      });
+      
+      // 防止页面刷新/关闭时误操作
+      window.addEventListener('beforeunload', (e) => {
+        if (gameState.score > 0) {
+          e.preventDefault();
+          e.returnValue = '你确定要离开吗？当前游戏进度将会丢失！';
+          return e.returnValue;
+        }
+      });
+      
+      // 键盘快捷键
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'h' || e.key === 'H') {
+          showHint(); // H键提示
+        } else if (e.key === 's' || e.key === 'S') {
+          handleShuffle(); // S键洗牌
+        } else if (e.key === 'r' || e.key === 'R') {
+          resetGame(true); // R键重新开始
+        }
+      });
+    }
+
+    // 显示分数弹窗
+    function showScorePopup(points) {
+      const popup = document.createElement('div');
+      popup.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary/90 text-white px-6 py-3 rounded-lg shadow-xl score-popup z-30';
+      popup.textContent = `+${points} 分！`;
+      document.body.appendChild(popup);
+      
+      // 自动移除弹窗
+      setTimeout(() => {
+        popup.remove();
+      }, 800);
+    }
+
+    // 检查关卡完成（独立函数）
+    function checkLevelCompletionImmediate() {
+      const currentLevelConfig = GAME_CONFIG.levels[gameState.level - 1];
+      
+      // 检查是否满足所有条件
+      const isCountMet = gameState.eliminatedCount >= currentLevelConfig.goalCount;
+      const isScoreMet = gameState.score >= currentLevelConfig.goalScore;
+      const hasTimeLeft = gameState.countdown > 0;
+      
+      if (isCountMet && isScoreMet && hasTimeLeft) {
+        // 显示关卡完成弹窗
+        elements.completedLevel.textContent = gameState.level;
+        elements.finalScore.textContent = gameState.score;
+        elements.targetScore.textContent = currentLevelConfig.goalScore;
+        elements.remainingTime.textContent = gameState.countdown;
+        elements.levelCompleteModal.classList.remove('hidden');
+        
+        // 播放通关音效
+        try {
+          const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3');
+          audio.volume = 0.7;
+          audio.play();
+        } catch (e) {
+          console.log('通关音效播放失败:', e);
+        }
+        
+        // 清除倒计时
+        if (gameState.countdownTimer) {
+          clearInterval(gameState.countdownTimer);
+        }
+        
+        return true;
+      }
+      
+      return false;
+    }
+
+    // 初始化游戏
+    function initGame() {
+      initLoading();
+      initLevelsList();
+      initEventListeners();
+      
+      // 预加载音效（提升体验）
+      const audioFiles = [
+        'https://assets.mixkit.co/sfx/preview/mixkit-interface-hint-notification-911.mp3',
+        'https://assets.mixkit.co/sfx/preview/mixkit-fast-small-sweep-transition-166.mp3',
+        'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3'
+      ];
+      
+      audioFiles.forEach(url => {
+        const audio = new Audio(url);
+        audio.load(); // 预加载
+      });
+      
+      // 初始化网格（延迟执行，确保DOM加载完成）
+      setTimeout(() => {
+        initGrid();
+        updateScoreDisplay();
+      }, 1000);
+    }
+
+    // 启动游戏
+    document.addEventListener('DOMContentLoaded', initGame);
+  </script>
+</body>
+</html>
