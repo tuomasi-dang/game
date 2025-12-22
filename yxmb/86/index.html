@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>李北阳光植物种植园 - v4.22 速成版</title>
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --primary-dark: #388E3C;
+      --primary-light: #81C784;
+      --field-bg: #c9b08c;
+      --plot-empty: #d2b48c;
+      --plot-growing: #a8e6a1;
+      --plot-mature: #ffeb3b;
+      --plot-wilted: #a9a9a9;
+      --plot-infested: #ff6b6b;
+      --warning: #FF9800;
+      --warning-dark: #F57C00;
+      --gray-light: #f5f5f5;
+      --gray: #e0e0e0;
+      --text-dark: #333;
+      --text-muted: #666;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+      --radius-sm: 4px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --transition: all 0.2s ease;
+      /* 新增土地等级颜色 */
+      --land-normal: #d2b48c;
+      --land-black: #424242;
+      --land-red: #b71c1c;
+      --land-gold: #ffd700;
+    }
+    
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif; 
+    }
+    
+    body { 
+      background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); 
+      padding: 16px; 
+      color: var(--text-dark); 
+      position: relative; 
+      min-height: 100vh;
+    }
+    
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto; 
+    }
+    
+    /* 头部优化 */
+    header {
+      text-align: center; 
+      margin-bottom: 16px;
+      background: white; 
+      padding: 16px; 
+      border-radius: var(--radius-lg); 
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--warning), var(--primary));
+    }
+    
+    h1 { 
+      color: var(--primary); 
+      margin-bottom: 8px; 
+      font-size: 28px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    header > div {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    
+    /* 统计面板优化 */
+    .stats {
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 12px; 
+      background: white; 
+      padding: 16px;
+      border-radius: var(--radius); 
+      margin-bottom: 16px; 
+      justify-content: space-around; 
+      font-size: 15px;
+      box-shadow: var(--shadow);
+      align-items: center;
+    }
+    
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--gray-light);
+      border-radius: var(--radius-sm);
+      min-width: 100px;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .stat-item span {
+      font-weight: bold;
+      color: var(--primary-dark);
+      /* 数字变化动画 */
+      transition: all 0.3s ease;
+    }
+    
+    .stat-item span.animate {
+      animation: numberPop 0.5s ease;
+    }
+    
+    /* 农田标题栏优化 */
+    .field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .field-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .field-weather {
+      background: #fff3cd; 
+      border: 1px solid #ffeaa7; 
+      border-radius: var(--radius-sm);
+      padding: 6px 12px; 
+      font-weight: bold; 
+      color: #856404;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: var(--transition);
+    }
+    
+    .field-weather.change {
+      animation: weatherPulse 0.8s ease infinite alternate;
+    }
+    
+    .field-achievement {
+      background: #e8f5e9; 
+      border: 1px solid #a5d6a7; 
+      border-radius: var(--radius-sm);
+      padding: 6px 12px; 
+      font-weight: bold; 
+      color: #2e7d32;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+    
+    /* 新增：土地等级显示 */
+    .field-land-level {
+      background: linear-gradient(135deg, var(--land-normal) 0%, #e6d2b8 100%);
+      border: 1px solid #8b6f4e;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px; 
+      font-weight: bold; 
+      color: #333;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* 称号进度条 */
+    .achievement-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 1px;
+      transition: var(--transition);
+    }
+    
+    /* 地块网格优化 */
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    
+    /* 地块样式优化 - 适配土地等级（核心修复：强制宽高+默认显示） */
+    .plot {
+      aspect-ratio: 1;
+      border: 2px solid #8b6f4e;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: flex !important; /* 强制显示，避免被隐藏 */
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      text-align: center;
+      padding: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.343-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%238b6f4e' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+      min-width: 100px; /* 强制最小宽度，确保移动端也能显示 */
+      min-height: 100px; /* 强制最小高度，避免高度为0 */
+    }
+    
+    /* 锁定地块样式增强（确保能看见） */
+    .plot.locked {
+      background: #555 !important;
+      color: #aaa !important;
+      cursor: not-allowed;
+      opacity: 0.8 !important; /* 提高不透明度，避免太淡看不见 */
+      border: 2px dashed #888 !important;
+    }
+    
+    /* 空地块样式增强 */
+    .plot.empty {
+      border: 2px solid #8b6f4e !important;
+    }
+    
+    .plot:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    
+    /* 成熟地块闪烁提醒 */
+    .plot.mature {
+      animation: matureFlash 1s infinite alternate;
+    }
+    
+    /* 不同土地等级的空地样式 */
+    .plot.empty.normal { background: linear-gradient(135deg, var(--land-normal) 0%, #e6d2b8 100%); }
+    .plot.empty.black { background: linear-gradient(135deg, var(--land-black) 0%, #616161 100%); color: white; }
+    .plot.empty.red { background: linear-gradient(135deg, var(--land-red) 0%, #d32f2f 100%); color: white; }
+    .plot.empty.gold { background: linear-gradient(135deg, var(--land-gold) 0%, #ffed4e 100%); color: #333; }
+    
+    /* 不同土地等级的生长中样式 */
+    .plot.growing.normal { background: linear-gradient(135deg, var(--plot-growing) 0%, #c8e6c9 100%); }
+    .plot.growing.black { background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%); color: white; }
+    .plot.growing.red { background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%); color: white; }
+    .plot.growing.gold { background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%); color: #333; }
+    
+    .plot.mature { background: linear-gradient(135deg, var(--plot-mature) 0%, #fff59d 100%); }
+    .plot.wilted { background: linear-gradient(135deg, var(--plot-wilted) 0%, #c0c0c0 100%); color: #555; }
+    .plot.infested { background: linear-gradient(135deg, var(--plot-infested) 0%, #ff8a80 100%); color: white; }
+    
+    @keyframes growPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.03); }
+    }
+    
+    @keyframes infestBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    @keyframes wiltShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-1px); }
+      75% { transform: translateX(1px); }
+    }
+    
+    @keyframes matureFlash {
+      0% { box-shadow: 0 0 5px var(--plot-mature); }
+      100% { box-shadow: 0 0 15px var(--plot-mature); }
+    }
+    
+    @keyframes weatherPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
+    }
+    
+    @keyframes numberPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    
+    /* 面板样式优化 */
+    .panel {
+      background: white; 
+      padding: 16px; 
+      border-radius: var(--radius);
+      margin-bottom: 20px; 
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    
+    .panel:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .panel h3 {
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--gray);
+    }
+    
+    /* 按钮样式优化 - 增强交互 */
+    button {
+      padding: 8px 16px; 
+      margin: 4px 2px; 
+      background: var(--primary);
+      color: white; 
+      border: none; 
+      border-radius: var(--radius-sm); 
+      cursor: pointer; 
+      font-size: 15px;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+    
+    button:hover::after {
+      width: 200px;
+      height: 200px;
+    }
+    
+    button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    button.warning {
+      background: var(--warning);
+    }
+    
+    button.warning:hover {
+      background: var(--warning-dark);
+    }
+    
+    button.secondary {
+      background: #607D8B;
+    }
+    
+    button.secondary:hover {
+      background: #455A64;
+    }
+    
+    /* 新增：土地操作按钮样式 */
+    button.land-expand {
+      background: #2196F3;
+    }
+    button.land-expand:hover {
+      background: #1976D2;
+    }
+    button.land-upgrade {
+      background: #9C27B0;
+    }
+    button.land-upgrade:hover {
+      background: #7B1FA2;
+    }
+    
+    /* 一键操作按钮组 */
+    .batch-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .hidden { display: none; }
+    
+    /* 优化后的通知系统 */
+    .notification-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .notification {
+      background: rgba(51, 51, 51, 0.95);
+      color: white;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 400px;
+      border-left: 4px solid var(--primary);
+      animation: slideIn 0.3s ease forwards, fadeOut 0.5s ease 3.5s forwards;
+      transform: translateX(120%);
+      opacity: 0;
+    }
+    
+    .notification.success {
+      border-left-color: var(--primary);
+      background: rgba(76, 175, 80, 0.95);
+    }
+    
+    .notification.warning {
+      border-left-color: var(--warning);
+      background: rgba(255, 152, 0, 0.95);
+    }
+    
+    .notification.error {
+      border-left-color: #F44336;
+      background: rgba(244, 67, 54, 0.95);
+    }
+    
+    .notification.info {
+      border-left-color: #2196F3;
+      background: rgba(33, 150, 243, 0.95);
+    }
+    
+    .notification.mature {
+      border-left-color: #FFEB3B;
+      background: rgba(255, 235, 59, 0.95);
+      color: #333;
+      animation: slideIn 0.3s ease forwards, fadeOut 0.5s ease 5s forwards;
+    }
+    
+    .notification-icon {
+      font-size: 24px;
+      min-width: 24px;
+      text-align: center;
+    }
+    
+    .notification-content {
+      flex: 1;
+    }
+    
+    .notification-title {
+      font-weight: bold;
+      margin-bottom: 2px;
+      font-size: 15px;
+    }
+    
+    .notification-message {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    @keyframes slideIn {
+      0% {
+        transform: translateX(120%);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes fadeOut {
+      0% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+    }
+    
+    /* 震动反馈动画 */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+    
+    .shake {
+      animation: shake 0.5s ease;
+    }
+    
+    /* 种子仓库优化 */
+    #seedInventory {
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap;
+    }
+    
+    #seedInventory .seed-card {
+      background: var(--gray-light);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 2px solid transparent;
+      min-width: 90px;
+      text-align: center;
+    }
+    
+    #seedInventory .seed-card.selected {
+      background: #fff3e0;
+      border-color: var(--warning);
+      box-shadow: 0 0 0 2px rgba(255,152,0,0.2), 0 2px 8px rgba(255,152,0,0.15);
+      transform: translateY(-2px);
+    }
+    
+    #seedInventory .seed-card:hover {
+      background: #e0f2f1;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .seed-count {
+      font-weight: bold;
+      color: var(--primary-dark);
+    }
+    
+    /* 地块按钮优化 */
+    .plot-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* 从4px改为2px，减小按钮间距 */
+  margin-top: 4px; /* 减小顶部外边距 */
+  width: 100%;
+  align-items: center;
+}
+    
+    .plot-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 2px 5px; /* 从5px 10px改为2px 5px，大幅缩小内边距 */
+  font-size: 11px; /* 从13px改为11px，减小字体 */
+  cursor: pointer;
+  z-index: 10;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  width: 90%; /* 从100%改为90%，减小宽度 */
+  text-align: center;
+  transition: var(--transition);
+}
+    
+    .plot-button:hover {
+  background: var(--primary-dark);
+  transform: scale(1.02);
+}
+
+/* 保留原有按钮类型的背景色样式 */
+.plot-button.spray {
+  background: #F44336;
+}
+
+.plot-button.spray:hover {
+  background: #D32F2F;
+}
+
+.plot-button.water {
+  background: #2196F3;
+}
+
+.plot-button.water:hover {
+  background: #1976D2;
+}
+
+.plot-button.fertilize {
+  background: #9C27B0;
+}
+
+.plot-button.fertilize:hover {
+  background: #7B1FA2;
+}
+    
+    /* 地块内容样式 */
+    .time-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    
+    .plot-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      position: relative;
+      z-index: 5;
+    }
+    
+    .crop-icon-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+    
+    .crop-icon {
+      font-size: 24px;
+    }
+    
+    .status-icon {
+      position: absolute;
+      font-size: 16px;
+      top: -6px;
+      right: -6px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ccc;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .status-icon.wilted {
+      background: rgba(169, 169, 169, 0.9);
+      color: white;
+      border-color: #888;
+    }
+    
+    .status-icon.infested {
+      background: rgba(255, 107, 107, 0.9);
+      color: white;
+      border-color: #e53935;
+    }
+    
+    .status-icon.dehydrated {
+      background: rgba(33, 150, 243, 0.9);
+      color: white;
+      border-color: #1565c0;
+    }
+    
+    .yield-info {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    
+    /* 可用地块提示 */
+    .unlocked-plot-count {
+      background: var(--gray-light);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-weight: bold;
+      color: var(--primary-dark);
+      margin-top: 8px;
+      text-align: center;
+      font-size: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* 打卡面板样式 */
+    .checkin-panel {
+      margin-bottom: 20px;
+    }
+    
+    .checkin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .checkin-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .checkin-stat {
+      background: var(--gray-light);
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+    }
+    
+    .checkin-stat strong {
+      color: var(--primary-dark);
+      font-size: 16px;
+    }
+    
+    .checkin-history {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--gray);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      margin-top: 12px;
+    }
+    
+    .checkin-record {
+      padding: 8px;
+      border-bottom: 1px solid var(--gray);
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    
+    .checkin-record:last-child {
+      border-bottom: none;
+    }
+    
+    .checkin-date {
+      color: var(--text-muted);
+    }
+    
+    .checkin-reward {
+      color: var(--primary-dark);
+      font-weight: bold;
+    }
+    
+    /* 新手引导弹窗 */
+    .guide-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .guide-content {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .guide-content h3 {
+      color: var(--primary-dark);
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    .guide-content ul {
+      margin-left: 20px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    
+    .guide-content li {
+      margin-bottom: 8px;
+    }
+    
+    .guide-content button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+      .field-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      }
+      
+      .stats {
+        justify-content: center;
+      }
+      
+      .stat-item {
+        min-width: unset;
+        width: 45%;
+      }
+      
+      .field-header {
+        justify-content: center;
+      }
+      
+      .field-weather, .field-achievement, .field-land-level {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .notification {
+        min-width: unset;
+        width: calc(100% - 40px);
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .stat-item {
+        width: 100%;
+      }
+      
+      button {
+        width: 100%;
+        margin: 4px 0;
+      }
+      
+      .plot {
+        padding: 4px;
+      }
+      
+      .crop-icon {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>&#127793; 李北阳光植物种植园 - v4.22</h1>
+      <div>&#9989; 急速模式 · &#9989; 扩地功能 · &#9989; 双称号系统 · &#9989; 每日打卡</div>
+    </header>
+ 
+    <!-- 优化后的统计面板 -->
+    <div class="stats">
+      <div class="stat-item">等级: <span id="level">1</span></div>
+      <div class="stat-item">经验: <span id="exp">0</span>/<span id="nextLevelExp">50</span></div>
+      <div class="stat-item">&#127793;种植数: <span id="plantedCount">0</span></div>
+      <div class="stat-item">&#128176;金币: <span id="gold">200</span></div>
+      <div class="stat-item">杀虫剂: <span id="pesticide">5</span></div>
+      <div class="stat-item">肥料: <span id="fertilizer">5</span></div>
+      <div class="stat-item">土地等级: <span id="landLevelText">普通土地</span></div>
+    </div>
+ 
+    <!-- 新增：土地操作面板 -->
+    <div class="panel">
+      <h3>&#127799; 土地管理</h3>
+      <button id="expandLandBtn" class="land-expand">🌾 借助托马斯之力扩地 (消耗100金币)</button>
+      <button id="upgradeLandBtn" class="land-upgrade">🔨 借助李北之力翻新土地</button>
+      <p style="margin-top: 8px; color: var(--text-muted); font-size: 14px;">
+        土地等级效果（速成版加成更高）：<br>
+        • 黑土地：收益+30%，成熟时间-20%<br>
+        • 红土地：收益+60%，成熟时间-30%<br>
+        • 金土地：收益+120%，成熟时间-40%
+      </p>
+    </div>
+ 
+    <!-- 新增：每日打卡面板 -->
+    <div class="panel checkin-panel">
+      <div class="checkin-header">
+        <h3>&#128197; 每日打卡（奖励翻倍）</h3>
+        <button id="checkinBtn" class="warning">立即打卡</button>
+      </div>
+      
+      <div class="checkin-stats">
+        <div class="checkin-stat">连续打卡: <strong id="consecutiveDays">0</strong> 天</div>
+        <div class="checkin-stat">总打卡次数: <strong id="totalCheckins">0</strong> 次</div>
+        <div class="checkin-stat">最后打卡: <strong id="lastCheckinTime">从未</strong></div>
+      </div>
+      
+      <div>
+        <h4 style="margin-bottom: 8px; font-size: 15px; color: var(--text-muted);">打卡奖励规则（速成版）：</h4>
+        <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+          <li>首次打卡：金币×100 + 小麦种子×5</li>
+          <li>连续1-3天：金币×60 + 随机种子×2</li>
+          <li>连续4-7天：金币×100 + 肥料×2 + 杀虫剂×2</li>
+          <li>连续7天以上：金币×200 + 向日葵种子×4 + 肥料×4</li>
+        </ul>
+      </div>
+      
+      <div class="checkin-history">
+        <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">打卡历史记录</div>
+        <div id="checkinHistoryList">暂无打卡记录</div>
+      </div>
+    </div>
+ 
+    <!-- 商店（价格减半） -->
+    <div class="panel">
+      <h3>&#128722; 商店（速成版半价）</h3>
+      <button onclick="buySeed('小麦', 5)">买小麦 (5金币)</button>
+      <button onclick="buySeed('玉米', 10)">买玉米 (10金币)</button>
+      <button onclick="buySeed('土豆', 8)">买土豆 (8金币)</button>
+      <button onclick="buySeed('番茄', 9)">买番茄 (9金币)</button>
+      <button onclick="buySeed('向日葵', 12)">买向日葵 (12金币)</button>
+      <button onclick="buyItem('pesticide', 4)" class="secondary">&#129713; 杀虫剂 (4金币)</button>
+      <button onclick="buyItem('fertilizer', 5)" class="secondary">&#127807; 肥料 (5金币)</button>
+    </div>
+ 
+    <!-- 一键操作面板 -->
+    <div class="panel">
+      <h3>&#9889; 批量操作</h3>
+      <div class="batch-actions">
+        <button onclick="harvestAll()" class="warning">&#128260; 一键收获</button>
+        <button onclick="waterAll()" class="secondary">&#128167; 一键浇水</button>
+        <button onclick="sprayAll()" class="secondary">&#129454; 一键杀虫</button>
+        <button onclick="fertilizeAll()" class="secondary">&#127807; 一键施肥</button>
+      </div>
+    </div>
+ 
+    <!-- 种子仓库 -->
+    <div class="panel">
+      <h3>&#129530; 我的种子库</h3>
+      <div id="seedInventory"></div>
+      <p style="margin-top: 12px; color: var(--text-muted);">当前选中：<span id="selectedSeedDisplay">无</span></p>
+    </div>
+ 
+    <!-- 农田标题 + 双称号 + 天气 + 土地等级 -->
+    <div class="field-header">
+      <div class="field-title">&#127806; 农田</div>
+      <div class="field-achievement" id="currentPlantAchievement">
+        &#127793; 初芽萌动
+        <div class="achievement-progress" id="plantAchievementProgress" style="width: 0%"></div>
+      </div>
+      <div class="field-achievement" id="currentGoldAchievement">
+        &#128176; 青铜
+        <div class="achievement-progress" id="goldAchievementProgress" style="width: 0%"></div>
+      </div>
+      <div class="field-weather" id="weatherDisplay">&#127780;&#65039; 当前天气：晴天</div>
+      <div class="field-land-level" id="landLevelDisplay">🌾 普通土地</div>
+    </div>
+ 
+    <div id="farm-land" class="field-grid"></div>
+    <div class="unlocked-plot-count" id="unlockedPlotCount">可用地块: 10/50</div>
+ 
+    <!-- 存档操作 -->
+    <div class="panel">
+      <button onclick="saveGame()" class="secondary">&#128190; 保存</button>
+      <button onclick="loadGame()" class="secondary">&#128194; 读取</button>
+      <button onclick="clearSave()" class="warning">&#128465;&#65039; 清除存档</button>
+    </div>
+  </div>
+ 
+  <!-- 新手引导弹窗 -->
+  <div class="guide-modal" id="guideModal" style="display: none;">
+    <div class="guide-content">
+      <h3>🌾 李北阳光植物种植园 - 新手引导</h3>
+      <ul>
+        <li>✅ 速成版作物生长时间大幅缩短（10-30秒成熟）</li>
+        <li>✅ 初始金币/道具更多，商店半价，扩地/升级成本更低</li>
+        <li>✅ 点击种子库选择种子，再点击空地种植</li>
+        <li>✅ 作物成熟会闪烁提醒，一键操作更便捷</li>
+        <li>✅ 每日打卡奖励翻倍，快速积累资源</li>
+        <li>✅ 土地升级后收益更高、生长更快</li>
+      </ul>
+      <button onclick="document.getElementById('guideModal').style.display='none'">开始游戏 🎮</button>
+    </div>
+  </div>
+ 
+  <!-- 通知容器 -->
+  <div class="notification-container" id="notificationContainer"></div>
+ 
+  <script>
+    // ===== 作物定义（速成版：生长时间改为秒级）=====
+    const CROPS = {
+      小麦:  { icon: '&#127806;', growthTime: 10000, reward: 15 },  // 10秒
+      玉米:  { icon: '&#127805;', growthTime: 15000, reward: 30 },  // 15秒
+      土豆:  { icon: '&#129364;', growthTime: 12000, reward: 25 },  // 12秒
+      番茄:  { icon: '&#127813;', growthTime: 18000, reward: 28 },  // 18秒
+      向日葵:{ icon: '&#127803;', growthTime: 25000, reward: 40 }   // 25秒
+    };
+    
+    // ===== 土地等级配置（速成版：成本降低，加成更高）=====
+    const LAND_LEVELS = {
+      0: { name: '普通土地', color: 'normal', rewardRate: 1.0, timeRate: 1.0, upgradeCost: 200 },
+      1: { name: '黑土地', color: 'black', rewardRate: 1.3, timeRate: 0.8, upgradeCost: 800 },
+      2: { name: '红土地', color: 'red', rewardRate: 1.6, timeRate: 0.7, upgradeCost: 2000 },
+      3: { name: '金土地', color: 'gold', rewardRate: 2.2, timeRate: 0.6, upgradeCost: 0 } // 最高等级
+    };
+    
+    const SAVE_KEY = 'sunshineFarm_savedate';
+    
+    // ===== 天气系统（带自定义概率，速成版：灾害概率降低）=====
+    const WEATHERS = [
+      { name: '晴天', icon: '&#9728;&#65039;', effect: 'normal', weight: 75 },
+      { name: '雨天', icon: '&#127783;&#65039;', effect: 'rain', weight: 20 },
+      { name: '干旱', icon: '&#128293;', effect: 'drought', weight: 3 },
+      { name: '虫灾', icon: '&#128027;', effect: 'pest_outbreak', weight: 2 }
+    ];
+    
+    let currentWeather = WEATHERS[0];
+    let selectedSeed = null;
+    
+    // ===== 等级配置 =====
+    const LEVEL_CONFIG = [
+      { level: 1, exp: 0, nextExp: 50, unlockPlots: 10 },
+      { level: 2, exp: 50, nextExp: 100, unlockPlots: 12 },
+      { level: 3, exp: 100, nextExp: 200, unlockPlots: 15 },
+      { level: 4, exp: 200, nextExp: 350, unlockPlots: 18 },
+      { level: 5, exp: 350, nextExp: 500, unlockPlots: 22 },
+      { level: 6, exp: 500, nextExp: 800, unlockPlots: 25 },
+      { level: 7, exp: 800, nextExp: 1200, unlockPlots: 30 },
+      { level: 8, exp: 1200, nextExp: 2000, unlockPlots: 35 },
+      { level: 9, exp: 2000, nextExp: 3000, unlockPlots: 40 },
+      { level: 10, exp: 3000, nextExp: 0, unlockPlots: 50 }
+    ];
+ 
+    function getRandomWeather() {
+      const totalWeight = WEATHERS.reduce((sum, w) => sum + w.weight, 0);
+      let random = Math.random() * totalWeight;
+       
+      for (const weather of WEATHERS) {
+        if (random < weather.weight) {
+          return weather;
+        }
+        random -= weather.weight;
+      }
+      return WEATHERS[0];
+    }
+    
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+ 
+    function changeWeather() {
+      let newWeather;
+      do {
+        newWeather = getRandomWeather();
+      } while (newWeather.name === currentWeather.name && WEATHERS.length > 1);
+ 
+      currentWeather = newWeather;
+      const weatherEl = document.getElementById('weatherDisplay');
+      weatherEl.innerHTML = `${currentWeather.icon} 当前天气：${currentWeather.name}`;
+      weatherEl.classList.add('change');
+      setTimeout(() => weatherEl.classList.remove('change'), 1000);
+      
+      notify(`&#127782;&#65039; 天气变为：${currentWeather.name}`, 'info', '天气变化');
+    }
+ 
+    document.getElementById('weatherDisplay').innerHTML = 
+      `${currentWeather.icon} 当前天气：${currentWeather.name}`;
+    
+    setInterval(changeWeather, 60000); // 天气变化频率加快，1分钟一次
+ 
+    // ===== 金币称号系统（9级）=====
+    const GOLD_TITLES = [
+      { name: '&#128176; 青铜', minGold: 0 },
+      { name: '&#128176; 白银', minGold: 100 },
+      { name: '&#128176; 黄金', minGold: 200 },
+      { name: '&#128176; 铂金', minGold: 400 },
+      { name: '&#128176; 钻石', minGold: 800 },
+      { name: '&#128176; 星耀', minGold: 1600 },
+      { name: '&#128176; 巅峰', minGold: 3200 },
+      { name: '&#128176; 大亨', minGold: 6400 },
+      { name: '&#128176; 巨富', minGold: 15000 }
+    ];
+ 
+    // ===== 种植数量称号系统（30级）=====
+    const PLANT_TITLES = [
+      { name: '&#127793; 初芽萌动', minPlants: 6 },
+      { name: '&#127793; 青苗新秀', minPlants: 16 },
+      { name: '&#127793; 绿野耕耘者', minPlants: 31 },
+      { name: '&#127793; 田畦守护者', minPlants: 51 },
+      { name: '&#127793; 沃土行者', minPlants: 101 },
+      { name: '&#127793; 丰收初成者', minPlants: 201 },
+      { name: '&#127793; 绿荫筑梦师', minPlants: 301 },
+      { name: '&#127793; 田园交响者', minPlants: 501 },
+      { name: '&#127793; 大地织锦人', minPlants: 800 },
+      { name: '&#127793; 千畦之主', minPlants: 1200 },
+      { name: '&#127793; 绿洲缔造者', minPlants: 1800 },
+      { name: '&#127793; 丰饶领主', minPlants: 2500 },
+      { name: '&#127793; 生态园丁', minPlants: 3500 },
+      { name: '&#127793; 田园诗人', minPlants: 5000 },
+      { name: '&#127793; 大地导师', minPlants: 7000 },
+      { name: '&#127793; 万亩耕耘者', minPlants: 10000 },
+      { name: '&#127793; 绿野宗师', minPlants: 15000 },
+      { name: '&#127793; 丰饶圣徒', minPlants: 20000 },
+      { name: '&#127793; 生态先知', minPlants: 30000 },
+      { name: '&#127793; 田园先知', minPlants: 40000 },
+      { name: '&#127793; 绿野之神', minPlants: 50000 },
+      { name: '&#127793; 丰饶之神', minPlants: 60000 },
+      { name: '&#127793; 大地之灵', minPlants: 70000 },
+      { name: '&#127793; 田园圣主', minPlants: 80000 },
+      { name: '&#127793; 万顷农皇', minPlants: 90000 },
+      { name: '&#127793; 五谷丰登王', minPlants: 100000 },
+      { name: '&#127793; 田园创世神', minPlants: 120000 },
+      { name: '&#127793; 万物生养者', minPlants: 150000 },
+      { name: '&#127793; 大地母神', minPlants: 180000 },
+      { name: '&#127793; 丰饶之源', minPlants: 200000 }
+    ];
+ 
+    // ===== 游戏状态（速成版：初始资源更多，解锁地块更多）=====
+    let gameState = {
+      level: 1,
+      exp: 0,
+      gold: 200,
+      pesticide: 5,
+      fertilizer: 5,
+      seeds: { 小麦: 10, 玉米: 8, 土豆: 6, 番茄: 4, 向日葵: 2 },
+      totalHarvest: 0,
+      totalPlanted: 0,
+      totalEarnedGold: 200,
+      lands: {
+        farm: initPlots(50) // 最大地块数提升到50
+      },
+      // 扩地相关（速成版：初始解锁10块地）
+      unlockedPlots: 10, // 初始解锁10块地
+      maxPlots: 50,      // 最大地块数
+      // 土地等级相关
+      landLevel: 0,     // 0普通/1黑/2红/3金
+      // 打卡相关状态
+      checkInRecords: [],      // 打卡记录 [{time: 时间戳, date: 日期, reward: 奖励描述}]
+      lastCheckInDate: '',     // 最后打卡日期 YYYY-MM-DD
+      consecutiveCheckInDays: 0, // 连续打卡天数
+      hasSeenGuide: false      // 是否看过新手引导
+    };
+ 
+    // 初始化地块
+    function initPlots(count) {
+      const plots = [];
+      for (let i = 0; i < count; i++) {
+        plots.push({
+          crop: null,
+          plantedAt: null,
+          lastWatered: null,
+          wiltedAt: null,
+          infestedAt: null,
+          totalInfestedTime: 0,
+          totalWiltedTime: 0,
+          infestedStartTime: null,
+          wiltedStartTime: null,
+          hasEverBeenInfested: false,
+          hasEverBeenWilted: false,
+          fertilized: false
+        });
+      }
+      return plots;
+    }
+ 
+    // 加载存档
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (saved) {
+      try {
+        const loadedState = JSON.parse(saved);
+        if (loadedState && typeof loadedState.gold === 'number') {
+          // 兼容旧存档，补充新字段 + 强制兜底
+          gameState = {
+            ...gameState,
+            ...loadedState,
+            exp: loadedState.exp || 0,
+            unlockedPlots: (loadedState.unlockedPlots || 10), // 兜底10块
+            maxPlots: (loadedState.maxPlots || 50),
+            landLevel: (loadedState.landLevel || 0),
+            checkInRecords: (loadedState.checkInRecords || []),
+            lastCheckInDate: (loadedState.lastCheckInDate || ''),
+            consecutiveCheckInDays: (loadedState.consecutiveCheckInDays || 0),
+            hasSeenGuide: (loadedState.hasSeenGuide || false),
+            // 确保lands.farm有值
+            lands: {
+              farm: loadedState.lands?.farm || initPlots(50)
+            }
+          };
+        }
+      } catch (e) {
+        console.warn('存档损坏，使用默认值', e);
+        // 存档损坏时重置为默认，确保地块能显示
+        gameState.unlockedPlots = 10;
+        gameState.lands.farm = initPlots(50);
+      }
+    }
+ 
+    // ===== 增强版通知函数（新增成熟提醒）=====
+    let notificationId = 0;
+    function notify(message, type = 'success', title = '', vibrate = true) {
+      // 震动反馈（浏览器支持时）
+      if (vibrate && navigator.vibrate) {
+        navigator.vibrate(100);
+      }
+      
+      const container = document.getElementById('notificationContainer');
+      const id = `notification-${notificationId++}`;
+      
+      // 自动生成标题
+      if (!title) {
+        switch (type) {
+          case 'success': title = '操作成功'; break;
+          case 'warning': title = '温馨提示'; break;
+          case 'error': title = '操作失败'; break;
+          case 'info': title = '系统通知'; break;
+          case 'mature': title = '🎉 作物成熟'; break;
+        }
+      }
+      
+      // 图标映射
+      const icons = {
+        success: '✅',
+        warning: '⚠️',
+        error: '❌',
+        info: 'ℹ️',
+        mature: '🍾'
+      };
+      
+      // 创建通知元素
+      const notification = document.createElement('div');
+      notification.id = id;
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <div class="notification-icon">${icons[type] || icons.success}</div>
+        <div class="notification-content">
+          <div class="notification-title">${title}</div>
+          <div class="notification-message">${message}</div>
+        </div>
+      `;
+      
+      // 点击通知可手动关闭
+      notification.onclick = () => {
+        notification.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => container.removeChild(notification), 300);
+      };
+      
+      container.appendChild(notification);
+      
+      // 自动关闭（成熟通知保留5秒，其他4秒）
+      const closeTime = type === 'mature' ? 5000 : 4000;
+      setTimeout(() => {
+        if (document.getElementById(id)) {
+          notification.style.animation = 'fadeOut 0.5s ease forwards';
+          setTimeout(() => {
+            if (document.getElementById(id)) {
+              container.removeChild(notification);
+            }
+          }, 500);
+        }
+      }, closeTime);
+    }
+ 
+    function formatTime(ms) {
+      if (ms < 0) ms = 0;
+      const s = Math.floor(ms / 1000);
+      if (s < 60) return `${s}s`;
+      const m = Math.floor(s / 60);
+      const remainingS = s % 60;
+      return `${m}m${remainingS}s`;
+    }
+    
+    // 格式化日期时间
+    function formatDateTime(timestamp) {
+      const date = new Date(timestamp);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+    
+    // 获取当前日期 YYYY-MM-DD
+    function getCurrentDate() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+ 
+    // ===== 等级升级函数 =====
+    function levelUpCheck() {
+      const currentLevelCfg = LEVEL_CONFIG.find(cfg => cfg.level === gameState.level);
+      if (!currentLevelCfg || currentLevelCfg.nextExp === 0) return;
+      
+      if (gameState.exp >= currentLevelCfg.nextExp) {
+        gameState.level++;
+        const nextLevelCfg = LEVEL_CONFIG.find(cfg => cfg.level === gameState.level) || currentLevelCfg;
+        
+        // 升级奖励
+        gameState.gold += 100 * gameState.level;
+        gameState.pesticide += 2;
+        gameState.fertilizer += 2;
+        
+        // 解锁更多地块
+        if (nextLevelCfg.unlockPlots > gameState.unlockedPlots) {
+          gameState.unlockedPlots = nextLevelCfg.unlockPlots;
+          updateUnlockedPlotCount();
+        }
+        
+        // 升级通知
+        notify(`🎊 恭喜升级到${gameState.level}级！
+奖励：金币×${100 * gameState.level} + 杀虫剂×2 + 肥料×2
+解锁地块数：${gameState.unlockedPlots}`, 'success', '等级提升');
+        
+        // 更新UI
+        renderStats();
+      }
+    }
+    
+    // ===== 增加经验函数 =====
+    function addExp(amount) {
+      gameState.exp += amount;
+      const expEl = document.getElementById('exp');
+      expEl.classList.add('animate');
+      setTimeout(() => expEl.classList.remove('animate'), 500);
+      levelUpCheck();
+      renderStats();
+    }
+ 
+    // ===== 扩地功能（速成版：成本降低）=====
+    function expandLand() {
+      const expandCost = 100 + (gameState.unlockedPlots - 10) * 20; // 速成版：扩地成本更低
+      
+      if (gameState.unlockedPlots >= gameState.maxPlots) {
+        return notify('已扩至最大地块数（50块），无法继续扩地！', 'warning', '扩地失败');
+      }
+      
+      if (gameState.gold < expandCost) {
+        return notify(`金币不足！扩地需要${expandCost}金币`, 'error', '扩地失败');
+      }
+      
+      // 扣除金币，扩地
+      gameState.gold -= expandCost;
+      gameState.unlockedPlots += 1;
+      
+      // 增加经验
+      addExp(20);
+      
+      // 更新UI
+      renderStats();
+      renderField();
+      updateUnlockedPlotCount();
+      
+      // 提示
+      notify(`借助托马斯之力，已为您扩充1块土地！当前可用地块：${gameState.unlockedPlots}/${gameState.maxPlots}`, 
+             'success', '扩地成功');
+    }
+    
+    // ===== 土地升级功能 =====
+    function upgradeLand() {
+      const currentLevel = gameState.landLevel;
+      const nextLevel = currentLevel + 1;
+      
+      // 检查是否已达最高等级
+      if (!LAND_LEVELS[nextLevel] || LAND_LEVELS[nextLevel].upgradeCost === 0) {
+        return notify('已达最高土地等级（金土地），无法继续升级！', 'warning', '升级失败');
+      }
+      
+      const upgradeCost = LAND_LEVELS[      // ===== 土地升级功能（续）=====
+      nextLevel].upgradeCost;
+      
+      // 检查金币是否足够
+      if (gameState.gold < upgradeCost) {
+        return notify(`金币不足！升级${LAND_LEVELS[nextLevel].name}需要${upgradeCost}金币`, 'error', '升级失败');
+      }
+      
+      // 扣除金币，升级土地
+      gameState.gold -= upgradeCost;
+      gameState.landLevel = nextLevel;
+      const newLandLevel = LAND_LEVELS[nextLevel];
+      
+      // 升级奖励
+      gameState.pesticide += 5;
+      gameState.fertilizer += 5;
+      addExp(100);
+      
+      // 更新UI
+      updateLandLevelDisplay();
+      renderStats();
+      renderField(); // 重新渲染地块以应用新的土地等级样式
+      
+      // 提示
+      notify(`🔨 借助李北之力，土地已升级为${newLandLevel.name}！
+效果：收益×${newLandLevel.rewardRate}，成熟时间×${newLandLevel.timeRate}
+奖励：杀虫剂×5 + 肥料×5 + 经验×100`, 'success', '土地升级成功');
+    }
+    
+    // ===== 更新土地等级显示 =====
+    function updateLandLevelDisplay() {
+      const landLevel = LAND_LEVELS[gameState.landLevel];
+      document.getElementById('landLevelText').textContent = landLevel.name;
+      document.getElementById('landLevelDisplay').innerHTML = `🌾 ${landLevel.name}`;
+      document.getElementById('landLevelDisplay').style.background = `linear-gradient(135deg, var(--land-${landLevel.color}) 0%, ${
+        landLevel.color === 'normal' ? '#e6d2b8' : 
+        landLevel.color === 'black' ? '#616161' : 
+        landLevel.color === 'red' ? '#d32f2f' : '#ffed4e'
+      }) 100%)`;
+    }
+    
+    // ===== 打卡功能实现 =====
+    function checkIn() {
+      const today = getCurrentDate();
+      
+      // 检查是否已打卡
+      if (gameState.lastCheckInDate === today) {
+        return notify('今日已打卡，请勿重复打卡！', 'warning', '打卡失败');
+      }
+      
+      // 计算连续打卡天数
+      let newConsecutiveDays = 1;
+      if (gameState.lastCheckInDate) {
+        const lastDate = new Date(gameState.lastCheckInDate);
+        const todayDate = new Date(today);
+        const diffTime = Math.abs(todayDate - lastDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+          newConsecutiveDays = gameState.consecutiveCheckInDays + 1;
+        } else {
+          newConsecutiveDays = 1; // 断签，重置为1天
+        }
+      }
+      
+      // 计算打卡奖励（速成版奖励翻倍）
+      let rewardGold = 0;
+      let rewardSeeds = {};
+      let rewardPesticide = 0;
+      let rewardFertilizer = 0;
+      let rewardDesc = '';
+      
+      if (gameState.checkInRecords.length === 0) {
+        // 首次打卡
+        rewardGold = 100;
+        rewardSeeds = { 小麦: 5 };
+        rewardDesc = '金币×100 + 小麦种子×5';
+      } else if (newConsecutiveDays <= 3) {
+        // 连续1-3天
+        rewardGold = 60;
+        const randomSeed = Object.keys(CROPS)[Math.floor(Math.random() * Object.keys(CROPS).length)];
+        rewardSeeds = { [randomSeed]: 2 };
+        rewardDesc = `金币×60 + ${randomSeed}种子×2`;
+      } else if (newConsecutiveDays <= 7) {
+        // 连续4-7天
+        rewardGold = 100;
+        rewardPesticide = 2;
+        rewardFertilizer = 2;
+        rewardDesc = '金币×100 + 肥料×2 + 杀虫剂×2';
+      } else {
+        // 连续7天以上
+        rewardGold = 200;
+        rewardSeeds = { 向日葵: 4 };
+        rewardPesticide = 4;
+        rewardFertilizer = 4;
+        rewardDesc = '金币×200 + 向日葵种子×4 + 肥料×4 + 杀虫剂×4';
+      }
+      
+      // 发放奖励
+      gameState.gold += rewardGold;
+      if (rewardPesticide > 0) gameState.pesticide += rewardPesticide;
+      if (rewardFertilizer > 0) gameState.fertilizer += rewardFertilizer;
+      
+      // 发放种子奖励
+      for (const [seed, count] of Object.entries(rewardSeeds)) {
+        if (!gameState.seeds[seed]) gameState.seeds[seed] = 0;
+        gameState.seeds[seed] += count;
+      }
+      
+      // 更新打卡状态
+      gameState.lastCheckInDate = today;
+      gameState.consecutiveCheckInDays = newConsecutiveDays;
+      
+      // 记录打卡记录
+      const checkInRecord = {
+        time: Date.now(),
+        date: today,
+        reward: rewardDesc
+      };
+      gameState.checkInRecords.unshift(checkInRecord);
+      if (gameState.checkInRecords.length > 30) {
+        gameState.checkInRecords = gameState.checkInRecords.slice(0, 30); // 只保留最近30条
+      }
+      
+      // 增加经验
+      addExp(50);
+      
+      // 更新UI
+      updateCheckInUI();
+      renderStats();
+      renderSeedInventory();
+      
+      // 提示
+      notify(`🎉 打卡成功！连续打卡${newConsecutiveDays}天
+获得奖励：${rewardDesc}`, 'success', '每日打卡');
+    }
+    
+    // ===== 更新打卡UI =====
+    function updateCheckInUI() {
+      document.getElementById('consecutiveDays').textContent = gameState.consecutiveCheckInDays;
+      document.getElementById('totalCheckins').textContent = gameState.checkInRecords.length;
+      document.getElementById('lastCheckinTime').textContent = gameState.lastCheckInDate || '从未';
+      
+      // 更新打卡历史
+      const historyList = document.getElementById('checkinHistoryList');
+      if (gameState.checkInRecords.length === 0) {
+        historyList.innerHTML = '暂无打卡记录';
+        return;
+      }
+      
+      historyList.innerHTML = gameState.checkInRecords.map(record => `
+        <div class="checkin-record">
+          <span class="checkin-date">${formatDateTime(record.time)}</span>
+          <span class="checkin-reward">${record.reward}</span>
+        </div>
+      `).join('');
+    }
+    
+    // ===== 称号系统更新函数 =====
+    function updatePlantTitle() {
+      let currentTitle = PLANT_TITLES[0];
+      let progress = 0;
+      
+      // 找到当前称号
+      for (let i = PLANT_TITLES.length - 1; i >= 0; i--) {
+        if (gameState.totalPlanted >= PLANT_TITLES[i].minPlants) {
+          currentTitle = PLANT_TITLES[i];
+          break;
+        }
+      }
+      
+      // 计算进度
+      const nextTitleIndex = PLANT_TITLES.findIndex(t => t.minPlants > currentTitle.minPlants);
+      if (nextTitleIndex !== -1) {
+        const nextTitle = PLANT_TITLES[nextTitleIndex];
+        progress = (gameState.totalPlanted - currentTitle.minPlants) / (nextTitle.minPlants - currentTitle.minPlants);
+      } else {
+        progress = 1; // 最高称号
+      }
+      
+      // 限制进度0-1
+      progress = Math.max(0, Math.min(1, progress));
+      
+      // 更新UI
+      document.getElementById('currentPlantAchievement').innerHTML = `
+        ${currentTitle.name}
+        <div class="achievement-progress" id="plantAchievementProgress" style="width: ${progress * 100}%"></div>
+      `;
+    }
+    
+    function updateGoldTitle() {
+      let currentTitle = GOLD_TITLES[0];
+      let progress = 0;
+      
+      // 找到当前称号
+      for (let i = GOLD_TITLES.length - 1; i >= 0; i--) {
+        if (gameState.totalEarnedGold >= GOLD_TITLES[i].minGold) {
+          currentTitle = GOLD_TITLES[i];
+          break;
+        }
+      }
+      
+      // 计算进度
+      const nextTitleIndex = GOLD_TITLES.findIndex(t => t.minGold > currentTitle.minGold);
+      if (nextTitleIndex !== -1) {
+        const nextTitle = GOLD_TITLES[nextTitleIndex];
+        progress = (gameState.totalEarnedGold - currentTitle.minGold) / (nextTitle.minGold - currentTitle.minGold);
+      } else {
+        progress = 1; // 最高称号
+      }
+      
+      // 限制进度0-1
+      progress = Math.max(0, Math.min(1, progress));
+      
+      // 更新UI
+      document.getElementById('currentGoldAchievement').innerHTML = `
+        ${currentTitle.name}
+        <div class="achievement-progress" id="goldAchievementProgress" style="width: ${progress * 100}%"></div>
+      `;
+    }
+    
+    // ===== 更新可用地块数显示 =====
+    function updateUnlockedPlotCount() {
+      document.getElementById('unlockedPlotCount').textContent = `可用地块: ${gameState.unlockedPlots}/${gameState.maxPlots}`;
+    }
+    
+    // ===== 渲染统计信息 =====
+    function renderStats() {
+      const currentLevelCfg = LEVEL_CONFIG.find(cfg => cfg.level === gameState.level) || LEVEL_CONFIG[0];
+      
+      document.getElementById('level').textContent = gameState.level;
+      document.getElementById('exp').textContent = gameState.exp;
+      document.getElementById('nextLevelExp').textContent = currentLevelCfg.nextExp || 'MAX';
+      document.getElementById('plantedCount').textContent = gameState.totalPlanted;
+      
+      // 金币数字动画
+      const goldEl = document.getElementById('gold');
+      goldEl.textContent = gameState.gold;
+      goldEl.classList.add('animate');
+      setTimeout(() => goldEl.classList.remove('animate'), 500);
+      
+      document.getElementById('pesticide').textContent = gameState.pesticide;
+      document.getElementById('fertilizer').textContent = gameState.fertilizer;
+      
+      // 更新称号
+      updatePlantTitle();
+      updateGoldTitle();
+    }
+    
+    // ===== 渲染种子仓库 =====
+    function renderSeedInventory() {
+      const inventoryEl = document.getElementById('seedInventory');
+      inventoryEl.innerHTML = '';
+      
+      for (const [crop, count] of Object.entries(gameState.seeds)) {
+        if (count <= 0) continue;
+        
+        const seedCard = document.createElement('div');
+        seedCard.className = `seed-card ${selectedSeed === crop ? 'selected' : ''}`;
+        seedCard.innerHTML = `
+          ${CROPS[crop]?.icon || '🌱'} ${crop}
+          <div class="seed-count">×${count}</div>
+        `;
+        
+        seedCard.onclick = () => {
+          selectedSeed = crop;
+          document.querySelectorAll('.seed-card').forEach(card => {
+            card.classList.remove('selected');
+          });
+          seedCard.classList.add('selected');
+          document.getElementById('selectedSeedDisplay').textContent = crop;
+          notify(`已选择${crop}种子，点击空地即可种植`, 'info', '选择种子');
+        };
+        
+        inventoryEl.appendChild(seedCard);
+      }
+    }
+    
+    // ===== 渲染农田 =====
+    function renderField() {
+      const farmEl = document.getElementById('farm-land');
+      farmEl.innerHTML = '';
+      
+      const landLevel = LAND_LEVELS[gameState.landLevel];
+      const currentTime = Date.now();
+      
+      gameState.lands.farm.forEach((plot, index) => {
+        const plotEl = document.createElement('div');
+        plotEl.className = 'plot';
+        
+        // 锁定/解锁状态
+        if (index >= gameState.unlockedPlots) {
+          plotEl.classList.add('locked');
+          plotEl.innerHTML = `🔒<br>等级${getLevelForPlot(index)}级解锁`;
+          farmEl.appendChild(plotEl);
+          return;
+        }
+        
+        // 空地块
+        if (!plot.crop) {
+          plotEl.classList.add('empty', landLevel.color);
+          plotEl.innerHTML = `<div class="plot-content">${landLevel.name}<br>点击种植</div>`;
+          
+          plotEl.onclick = () => {
+            if (!selectedSeed || gameState.seeds[selectedSeed] <= 0) {
+              notify('请先选择有效的种子！', 'warning', '种植失败');
+              plotEl.classList.add('shake');
+              setTimeout(() => plotEl.classList.remove('shake'), 500);
+              return;
+            }
+            
+            // 消耗种子
+            gameState.seeds[selectedSeed]--;
+            if (gameState.seeds[selectedSeed] < 0) gameState.seeds[selectedSeed] = 0;
+            
+            // 种植作物
+            plot.crop = selectedSeed;
+            plot.plantedAt = currentTime;
+            plot.lastWatered = currentTime;
+            plot.wiltedAt = null;
+            plot.infestedAt = null;
+            plot.totalInfestedTime = 0;
+            plot.totalWiltedTime = 0;
+            plot.infestedStartTime = null;
+            plot.wiltedStartTime = null;
+            plot.hasEverBeenInfested = false;
+            plot.hasEverBeenWilted = false;
+            plot.fertilized = false;
+            
+            // 更新统计
+            gameState.totalPlanted++;
+            
+            // 增加经验
+            addExp(5);
+            
+            // 更新UI
+            renderField();
+            renderSeedInventory();
+            renderStats();
+            
+            notify(`${CROPS[selectedSeed].icon} 成功种植${selectedSeed}！`, 'success', '种植成功');
+          };
+          
+          farmEl.appendChild(plotEl);
+          return;
+        }
+        
+        // 有作物的地块
+        const cropInfo = CROPS[plot.crop];
+        const growthTime = cropInfo.growthTime * landLevel.timeRate;
+        const elapsed = currentTime - plot.plantedAt - (plot.fertilized ? growthTime * 0.1 : 0);
+        const remaining = Math.max(0, growthTime - elapsed);
+        
+        // 状态判断
+        let status = 'growing';
+        let statusIcon = '';
+        let statusText = '';
+        
+        // 计算灾害时间
+        if (plot.infestedAt && !plot.wiltedAt) {
+          if (!plot.infestedStartTime) plot.infestedStartTime = currentTime;
+          plot.totalInfestedTime += currentTime - plot.infestedAt;
+          plot.infestedAt = currentTime;
+          plot.hasEverBeenInfested = true;
+          
+          if (plot.totalInfestedTime > 5000) { // 虫害5秒枯萎
+            plot.wiltedAt = currentTime;
+            if (!plot.wiltedStartTime) plot.wiltedStartTime = currentTime;
+            plot.totalWiltedTime += currentTime - plot.wiltedAt;
+            plot.hasEverBeenWilted = true;
+          } else {
+            status = 'infested';
+            statusIcon = '<div class="status-icon infested">🐛</div>';
+            statusText = '虫害！';
+          }
+        }
+        
+        if (plot.wiltedAt) {
+          if (!plot.wiltedStartTime) plot.wiltedStartTime = currentTime;
+          plot.totalWiltedTime += currentTime - plot.wiltedAt;
+          plot.wiltedAt = currentTime;
+          plot.hasEverBeenWilted = true;
+          
+          status = 'wilted';
+          statusIcon = '<div class="status-icon wilted">💀</div>';
+          statusText = '枯萎！';
+        } else if (remaining <= 0) {
+          status = 'mature';
+          statusIcon = '<div class="status-icon">🍎</div>';
+          statusText = '可收获！';
+        } else {
+          // 检查干旱
+          const waterElapsed = currentTime - plot.lastWatered;
+          if (waterElapsed > 10000 && currentWeather.effect === 'drought') { // 干旱天气10秒缺水
+            statusIcon = '<div class="status-icon dehydrated">💧</div>';
+            statusText = '缺水！';
+          }
+        }
+        
+        // 设置地块样式
+        plotEl.classList.add(status, landLevel.color);
+        
+        // 计算产量（受土地等级和灾害影响）
+        let yieldMultiplier = landLevel.rewardRate;
+        if (plot.hasEverBeenInfested) yieldMultiplier *= 0.8;
+        if (plot.hasEverBeenWilted) yieldMultiplier *= 0.5;
+        const finalReward = Math.floor(cropInfo.reward * yieldMultiplier);
+        
+        // 地块内容
+        plotEl.innerHTML = `
+          <div class="plot-content">
+            <div class="crop-icon-container">
+              ${cropInfo.icon}
+              ${statusIcon}
+            </div>
+            ${plot.crop}
+            <div class="time-label">${formatTime(remaining)}</div>
+            ${statusText ? `<div class="yield-info">${statusText}</div>` : ''}
+            <div class="yield-info">预计收益: ${finalReward}金币</div>
+            <div class="plot-button-container">
+              ${status === 'infested' ? `<button class="plot-button spray" onclick="sprayPlot(${index})">🐛 杀虫</button>` : ''}
+              ${status.includes('wilted') ? '' : `<button class="plot-button water" onclick="waterPlot(${index})">💧 浇水</button>`}
+              ${!plot.fertilized && status !== 'mature' && status !== 'wilted' ? `<button class="plot-button fertilize" onclick="fertilizePlot(${index})">🌱 施肥</button>` : ''}
+              ${status === 'mature' ? `<button class="plot-button" onclick="harvestPlot(${index})">🎯 收获</button>` : ''}
+            </div>
+          </div>
+        `;
+        
+        farmEl.appendChild(plotEl);
+      });
+      
+      // 天气效果处理
+      if (currentWeather.effect === 'pest_outbreak') {
+        // 虫灾：随机让5%的地块生虫
+        const infestChance = 0.05;
+        gameState.lands.farm.forEach((plot, index) => {
+          if (index < gameState.unlockedPlots && plot.crop && !plot.infestedAt && !plot.wiltedAt && Math.random() < infestChance) {
+            plot.infestedAt = currentTime;
+            notify(`🐛 虫灾来袭！${plot.crop}地块发生虫害！`, 'warning', '虫灾预警');
+          }
+        });
+      } else if (currentWeather.effect === 'drought') {
+        // 干旱：增加缺水速度
+        notify(`🌞 干旱天气！作物缺水速度加快！`, 'warning', '干旱预警');
+      } else if (currentWeather.effect === 'rain') {
+        // 雨天：自动浇水
+        gameState.lands.farm.forEach((plot, index) => {
+          if (index < gameState.unlockedPlots && plot.crop) {
+            plot.lastWatered = currentTime;
+          }
+        });
+        notify(`🌧️ 天降甘霖！所有作物已浇水！`, 'success', '雨天福利');
+      }
+    }
+    
+    // ===== 辅助函数：获取解锁地块所需等级 =====
+    function getLevelForPlot(plotIndex) {
+      for (let i = LEVEL_CONFIG.length - 1; i >= 0; i--) {
+        if (plotIndex < LEVEL_CONFIG[i].unlockPlots) {
+          return LEVEL_CONFIG[i].level;
+        }
+      }
+      return LEVEL_CONFIG[LEVEL_CONFIG.length - 1].level;
+    }
+    
+    // ===== 地块操作函数 =====
+    function harvestPlot(index) {
+      const plot = gameState.lands.farm[index];
+      if (!plot.crop) return;
+      
+      const currentTime = Date.now();
+      const cropInfo = CROPS[plot.crop];
+      const landLevel = LAND_LEVELS[gameState.landLevel];
+      
+      // 计算产量
+      let yieldMultiplier = landLevel.rewardRate;
+      if (plot.hasEverBeenInfested) yieldMultiplier *= 0.8;
+      if (plot.hasEverBeenWilted) yieldMultiplier *= 0.5;
+      const finalReward = Math.floor(cropInfo.reward * yieldMultiplier);
+      
+      // 收获奖励
+      gameState.gold += finalReward;
+      gameState.totalEarnedGold += finalReward;
+      gameState.totalHarvest++;
+      
+      // 增加经验
+      addExp(10);
+      
+      // 清空地块
+      plot.crop = null;
+      plot.plantedAt = null;
+      plot.lastWatered = null;
+      plot.wiltedAt = null;
+      plot.infestedAt = null;
+      plot.totalInfestedTime = 0;
+      plot.totalWiltedTime = 0;
+      plot.infestedStartTime = null;
+      plot.wiltedStartTime = null;
+      plot.hasEverBeenInfested = false;
+      plot.hasEverBeenWilted = false;
+      plot.fertilized = false;
+      
+      // 更新UI
+      renderField();
+      renderStats();
+      
+      // 成熟通知（带震动）
+      notify(`${cropInfo.icon} 收获${plot.crop}×1！获得${finalReward}金币
+当前土地等级加成：×${landLevel.rewardRate}
+灾害影响：${plot.hasEverBeenInfested ? '虫害(-20%)' : ''}${plot.hasEverBeenWilted ? '枯萎(-50%)' : ''}`, 
+             'mature', '收获成功');
+    }
+    
+    function waterPlot(index) {
+      const plot = gameState.lands.farm[index];
+      if (!plot.crop || plot.wiltedAt) return;
+      
+      plot.lastWatered = Date.now();
+      notify(`💧 已为${plot.crop}浇水！`, 'success', '浇水成功');
+      renderField();
+    }
+    
+    function sprayPlot(index) {
+      const plot = gameState.lands.farm[index];
+      if (!plot.crop || !plot.infestedAt || gameState.pesticide <= 0) {
+        if (gameState.pesticide <= 0) notify('杀虫剂不足！', 'error', '杀虫失败');
+        return;
+      }
+      
+      gameState.pesticide--;
+      plot.infestedAt = null;
+      plot.infestedStartTime = null;
+      notify(`🐛 已为${plot.crop}杀虫！剩余杀虫剂：${gameState.pesticide}`, 'success', '杀虫成功');
+      
+      renderStats();
+      renderField();
+    }
+    
+    function fertilizePlot(index) {
+      const plot = gameState.lands.farm[index];
+      if (!plot.crop || plot.fertilized || plot.wiltedAt || gameState.fertilizer <= 0) {
+        if (gameState.fertilizer <= 0) notify('肥料不足！', 'error', '施肥失败');
+        return;
+      }
+      
+      gameState.fertilizer--;
+      plot.fertilized = true;
+      notify(`🌱 已为${plot.crop}施肥！生长速度+10%，剩余肥料：${gameState.fertilizer}`, 'success', '施肥成功');
+      
+      renderStats();
+      renderField();
+    }
+    
+    // ===== 批量操作函数 =====
+    function harvestAll() {
+      let harvestedCount = 0;
+      let totalGold = 0;
+      
+      gameState.lands.farm.forEach((plot, index) => {
+        if (index < gameState.unlockedPlots && plot.crop) {
+          const currentTime = Date.now();
+          const cropInfo = CROPS[plot.crop];
+          const landLevel = LAND_LEVELS[gameState.landLevel];
+          const growthTime = cropInfo.growthTime * landLevel.timeRate;
+          const elapsed = currentTime - plot.plantedAt - (plot.fertilized ? growthTime * 0.1 : 0);
+          const remaining = Math.max(0, growthTime - elapsed);
+          
+          if (remaining <= 0) {
+            // 计算产量
+            let yieldMultiplier = landLevel.rewardRate;
+            if (plot.hasEverBeenInfested) yieldMultiplier *= 0.8;
+            if (plot.hasEverBeenWilted) yieldMultiplier *= 0.5;
+            const finalReward = Math.floor(cropInfo.reward * yieldMultiplier);
+            
+            // 收获奖励
+            gameState.gold += finalReward;
+            gameState.totalEarnedGold += finalReward;
+            gameState.totalHarvest++;
+            totalGold += finalReward;
+            
+            // 清空地块
+            plot.crop = null;
+            plot.plantedAt = null;
+            plot.lastWatered = null;
+            plot.wiltedAt = null;
+            plot.infestedAt = null;
+            plot.totalInfestedTime = 0;
+            plot.totalWiltedTime = 0;
+            plot.infestedStartTime = null;
+            plot.wiltedStartTime = null;
+            plot.hasEverBeenInfested = false;
+            plot.hasEverBeenWilted = false;
+            plot.fertilized = false;
+            
+            harvestedCount++;
+          }
+        }
+      });
+      
+      if (harvestedCount > 0) {
+        // 增加经验
+        addExp(harvestedCount * 5);
+        
+        notify(`🚜 一键收获成功！
+收获作物×${harvestedCount}
+获得金币×${totalGold}`, 'success', '批量收获');
+        
+        renderField();
+        renderStats();
+      } else {
+        notify('暂无可收获的作物！', 'warning', '批量收获');
+      }
+    }
+    
+    function waterAll() {
+      let wateredCount = 0;
+      
+      gameState.lands.farm.forEach((plot, index) => {
+        if (index < gameState.unlockedPlots && plot.crop && !plot.wiltedAt) {
+          plot.lastWatered = Date.now();
+          wateredCount++;
+        }
+      });
+      
+      if (wateredCount > 0) {
+        notify(`💧 一键浇水成功！已为${wateredCount}块作物浇水`, 'success', '批量浇水');
+        renderField();
+      } else {
+        notify('暂无需要浇水的作物！', 'warning', '批量浇水');
+      }
+    }
+    
+    function sprayAll() {
+      if (gameState.pesticide <= 0) {
+        notify('杀虫剂不足！', 'error', '批量杀虫');
+        return;
+      }
+      
+      let sprayedCount = 0;
+      
+      gameState.lands.farm.forEach((plot, index) => {
+        if (index < gameState.unlockedPlots && plot.crop && plot.infestedAt && !plot.wiltedAt) {
+          plot.infestedAt = null;
+          plot.infestedStartTime = null;
+          sprayedCount++;
+        }
+      });
+      
+      if (sprayedCount > 0) {
+        gameState.pesticide -= sprayedCount;
+        if (gameState.pesticide < 0) gameState.pesticide = 0;
+        
+        notify(`🐛 一键杀虫成功！
+已为${sprayedCount}块作物杀虫
+剩余杀虫剂：${gameState.pesticide}`, 'success', '批量杀虫');
+        
+        renderStats();
+        renderField();
+      } else {
+        notify('暂无需要杀虫的作物！', 'warning', '批量杀虫');
+      }
+    }
+    
+    function fertilizeAll() {
+      if (gameState.fertilizer <= 0) {
+        notify('肥料不足！', 'error', '批量施肥');
+        return;
+      }
+      
+      let fertilizedCount = 0;
+      
+      gameState.lands.farm.forEach((plot, index) => {
+        if (index < gameState.unlockedPlots && plot.crop && !plot.fertilized && !plot.wiltedAt) {
+          plot.fertilized = true;
+          fertilizedCount++;
+        }
+      });
+      
+      if (fertilizedCount > 0) {
+        gameState.fertilizer -= fertilizedCount;
+        if (gameState.fertilizer < 0) gameState.fertilizer = 0;
+        
+        notify(`🌱 一键施肥成功！
+已为${fertilizedCount}块作物施肥
+剩余肥料：${gameState.fertilizer}`, 'success', '批量施肥');
+        
+        renderStats();
+        renderField();
+      } else {
+        notify('暂无需要施肥的作物！', 'warning', '批量施肥');
+      }
+    }
+    
+    // ===== 商店购买函数 =====
+    function buySeed(crop, price) {
+      if (gameState.gold < price) {
+        notify(`金币不足！购买${crop}种子需要${price}金币`, 'error', '购买失败');
+        return;
+      }
+      
+      gameState.gold -= price;
+      if (!gameState.seeds[crop]) gameState.seeds[crop] = 0;
+      gameState.seeds[crop]++;
+      
+      notify(`${CROPS[crop].icon} 成功购买${crop}种子×1！`, 'success', '购买成功');
+      
+      renderStats();
+      renderSeedInventory();
+    }
+    
+    function buyItem(itemType, price) {
+      if (gameState.gold < price) {
+        notify(`金币不足！购买${itemType === 'pesticide' ? '杀虫剂' : '肥料'}需要${price}金币`, 'error', '购买失败');
+        return;
+      }
+      
+      gameState.gold -= price;
+      if (itemType === 'pesticide') {
+        gameState.pesticide++;
+        notify(`🐛 成功购买杀虫剂×1！剩余：${gameState.pesticide}`, 'success', '购买成功');
+      } else {
+        gameState.fertilizer++;
+        notify(`🌱 成功购买肥料×1！剩余：${gameState.fertilizer}`, 'success', '购买成功');
+      }
+      
+      renderStats();
+    }
+    
+    // ===== 存档函数 =====
+    function saveGame() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
+        notify('💾 游戏存档已保存！', 'success', '存档成功');
+      } catch (e) {
+        notify('❌ 存档失败：' + e.message, 'error', '存档失败');
+      }
+    }
+    
+    function loadGame() {
+      try {
+        const saved = localStorage.getItem(SAVE_KEY);
+        if (!saved) {
+          notify('⚠️ 暂无存档数据！', 'warning', '读取失败');
+          return;
+        }
+        
+        const loadedState = JSON.parse(saved);
+        if (loadedState && typeof loadedState.gold === 'number') {
+          gameState = {
+            ...gameState,
+            ...loadedState,
+            lands: {
+              farm: loadedState.lands?.farm || initPlots(50)
+            },
+            checkInRecords: loadedState.checkInRecords || [],
+            lastCheckInDate: loadedState.lastCheckInDate || '',
+            consecutiveCheckInDays: loadedState.consecutiveCheckInDays || 0,
+            hasSeenGuide: loadedState.hasSeenGuide || false
+          };
+          
+          // 兼容旧存档的土地等级
+          if (typeof gameState.landLevel !== 'number') gameState.landLevel = 0;
+          
+          notify('📤 游戏存档已加载！', 'success', '读取成功');
+          
+          // 更新所有UI
+          renderStats();
+          renderSeedInventory();
+          renderField();
+          updateUnlockedPlotCount();
+          updateLandLevelDisplay();
+          updateCheckInUI();
+          updatePlantTitle();
+          updateGoldTitle();
+        }
+      } catch (e) {
+        notify('❌ 读取失败：存档损坏！', 'error', '读取失败');
+      }
+    }
+    
+    function clearSave() {
+      if (confirm('确定要清除所有存档数据吗？此操作不可恢复！')) {
+        localStorage.removeItem(SAVE_KEY);
+        // 重置游戏状态
+        gameState = {
+          level: 1,
+          exp: 0,
+          gold: 200,
+          pesticide: 5,
+          fertilizer: 5,
+          seeds: { 小麦: 10, 玉米: 8, 土豆: 6, 番茄: 4, 向日葵: 2 },
+          totalHarvest: 0,
+          totalPlanted: 0,
+          totalEarnedGold: 200,
+          lands: {
+            farm: initPlots(50)
+          },
+          unlockedPlots: 10,
+          maxPlots: 50,
+          landLevel: 0,
+          checkInRecords: [],
+          lastCheckInDate: '',
+          consecutiveCheckInDays: 0,
+          hasSeenGuide: true // 清除存档后不再显示新手引导
+        };
+        
+        notify('🗑️ 存档已清除，游戏已重置！', 'success', '清除成功');
+        
+        // 更新所有UI
+        renderStats();
+        renderSeedInventory();
+        renderField();
+        updateUnlockedPlotCount();
+        updateLandLevelDisplay();
+        updateCheckInUI();
+        updatePlantTitle();
+        updateGoldTitle();
+      }
+    }
+    
+    // ===== 初始化函数 =====
+    function initGame() {
+      // 显示新手引导
+      if (!gameState.hasSeenGuide) {
+        document.getElementById('guideModal').style.display = 'flex';
+        gameState.hasSeenGuide = true;
+      }
+      
+      // 绑定扩地和升级按钮
+      document.getElementById('expandLandBtn').onclick = expandLand;
+      document.getElementById('upgradeLandBtn').onclick = upgradeLand;
+      document.getElementById('checkinBtn').onclick = checkIn;
+      
+      // 初始化UI
+      renderStats();
+      renderSeedInventory();
+      renderField();
+      updateUnlockedPlotCount();
+      updateLandLevelDisplay();
+      updateCheckInUI();
+      
+      // 定时更新作物状态（每秒）
+      setInterval(() => {
+        renderField();
+        
+        // 检查成熟作物并发送通知
+        const currentTime = Date.now();
+        const landLevel = LAND_LEVELS[gameState.landLevel];
+        
+        gameState.lands.farm.forEach((plot, index) => {
+          if (index < gameState.unlockedPlots && plot.crop) {
+            const cropInfo = CROPS[plot.crop];
+            const growthTime = cropInfo.growthTime * landLevel.timeRate;
+            const elapsed = currentTime - plot.plantedAt - (plot.fertilized ? growthTime * 0.1 : 0);
+            const remaining = Math.max(0, growthTime - elapsed);
+            
+            if (remaining <= 0 && !plot._matureNotified) {
+              plot._matureNotified = true;
+              notify(`${cropInfo.icon} ${plot.crop}已成熟！请及时收获！`, 'mature', '作物成熟提醒');
+            } else if (remaining > 0) {
+              plot._matureNotified = false;
+            }
+          }
+        });
+      }, 1000);
+      
+      // 自动保存（5分钟一次）
+      setInterval(saveGame, 300000);
+      
+      notify('🌾 李北阳光植物种植园速成版已加载完成！', 'success', '游戏初始化');
+    }
+    
+    // 启动游戏
+    window.onload = initGame;
+  </script>
+</body>
+</html>
