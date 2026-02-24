@@ -187,11 +187,219 @@
 <script type="text/javascript" src="js/td-walk.js"></script>
 
 <!--<script type="text/javascript" src="td-pkg-min.js?fmts=1"></script>-->
+<!-- 游戏规则弹窗 -->
+<style>
+    /* 引入中文字体 */
+    @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
+    
+    #game-rules-modal-bg {
+        display: flex; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 20000; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); justify-content: center; align-items: center;
+    }
+    #game-rules-modal {
+        background: white; color: #292F36; border-radius: 20px; box-shadow: 0 8px 40px rgba(255, 107, 107, 0.4); max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 30px; position: relative; font-family: 'Ma Shan Zheng', cursive, sans-serif;
+    }
+    #game-rules-modal .close-btn {
+        position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #FF6B6B; opacity: 0.8; transition: opacity 0.3s;
+    }
+    #game-rules-modal .close-btn:hover {
+        opacity: 1;
+    }
+    #game-rules-modal .modal-header {
+        text-align: center; margin-bottom: 25px;
+    }
+    #game-rules-modal .modal-image {
+        width: 200px; height: 150px; object-fit: cover; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    #game-rules-modal h2 {
+        font-size: 28px; margin-bottom: 10px; text-align: center; color: #FF6B6B;
+    }
+    #game-rules-modal .subtitle {
+        font-size: 18px; color: #4ECDC4; margin-bottom: 20px;
+    }
+    #game-rules-modal .rules-content {
+        line-height: 1.8;
+    }
+    #game-rules-modal .rule-section {
+        margin-bottom: 20px; padding: 20px; background: #F7F9FB; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    #game-rules-modal .rule-section h3 {
+        font-size: 20px; margin-bottom: 12px; color: #FF6B6B; display: flex; align-items: center;
+    }
+    #game-rules-modal .rule-section h3 i {
+        margin-right: 10px;
+    }
+    #game-rules-modal .rule-section ul {
+        padding-left: 30px;
+    }
+    #game-rules-modal .rule-section li {
+        margin-bottom: 8px; position: relative;
+    }
+    #game-rules-modal .rule-section li::before {
+        content: '•'; color: #4ECDC4; font-weight: bold; position: absolute; left: -15px;
+    }
+    #game-rules-modal .tower-types {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;
+    }
+    #game-rules-modal .tower-type {
+        background: white; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); border: 2px solid #FFD166;
+    }
+    #game-rules-modal .tower-type h4 {
+        font-size: 16px; margin-bottom: 8px; color: #FF6B6B;
+    }
+    #game-rules-modal .tower-type p {
+        margin-bottom: 5px;
+    }
+    #game-rules-modal .start-btn {
+        display: block; width: 220px; margin: 30px auto 10px; padding: 18px; background: linear-gradient(135deg, #FF6B6B, #FF8C00); color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); font-family: 'Ma Shan Zheng', cursive, sans-serif;
+    }
+    #game-rules-modal .start-btn:hover {
+        transform: translateY(-3px); box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+    }
+    #game-rules-modal .tip {
+        text-align: center; margin-top: 15px; font-size: 14px; color: #666;
+    }
+    @media (max-width: 768px) {
+        #game-rules-modal {
+            width: 95%; padding: 20px;
+        }
+        #game-rules-modal h2 {
+            font-size: 24px;
+        }
+        #game-rules-modal .rule-section h3 {
+            font-size: 18px;
+        }
+        #game-rules-modal .tower-types {
+            grid-template-columns: 1fr;
+        }
+        #game-rules-modal .modal-image {
+            width: 150px; height: 110px;
+        }
+    }
+</style>
+<div id="game-rules-modal-bg">
+    <div id="game-rules-modal">
+        <div class="close-btn" onclick="closeRulesModal()">×</div>
+        <div class="modal-header">
+            <!-- 游戏图片 -->
+            <img src="pic/avatar.jpg" alt="无敌塔防游戏" class="modal-image">
+            <h2>🏰 无敌塔防</h2>
+            <div class="subtitle">🎮 游戏规则</div>
+        </div>
+        <div class="rules-content">
+            <div class="rule-section">
+                <h3>🎯 游戏目标</h3>
+                <p>保护地图右侧的基地，阻止坏坏的敌人从左侧的入口闯进来！每波敌人都有不同的本领，你需要聪明地布置防御塔来对付它们。如果太多敌人闯进基地，游戏就会结束哦～</p>
+            </div>
+
+            <div class="rule-section">
+                <h3>💰 资源系统</h3>
+                <ul>
+                    <li>初始金币：1000金币（好多钱钱！）</li>
+                    <li>击败敌人获得金币：根据敌人类型获得5-50金币</li>
+                    <li>用金币建造和升级漂亮的防御塔</li>
+                    <li>每波敌人结束后会获得额外金币奖励</li>
+                    <li>合理规划金币使用，成为理财小能手～</li>
+                </ul>
+            </div>
+
+            <div class="rule-section">
+                <h3>🌸 防御塔类型与花费</h3>
+                <div class="tower-types">
+                    <div class="tower-type">
+                        <h4>基础炮塔</h4>
+                        <p>基础攻击塔，适合刚开始使用</p>
+                        <p>建造花费：100金币</p>
+                        <p>升级花费：150/250金币</p>
+                    </div>
+                    <div class="tower-type">
+                        <h4>冰霜塔</h4>
+                        <p>让敌人变慢变慢，配合其他塔超厉害</p>
+                        <p>建造花费：150金币</p>
+                        <p>升级花费：200/300金币</p>
+                    </div>
+                    <div class="tower-type">
+                        <h4>毒雾喷射塔</h4>
+                        <p>让敌人持续掉血，好厉害～</p>
+                        <p>建造花费：200金币</p>
+                        <p>升级花费：250/350金币</p>
+                    </div>
+                    <div class="tower-type">
+                        <h4>EMP炮</h4>
+                        <p>可以同时攻击多个敌人，超酷的！</p>
+                        <p>建造花费：250金币</p>
+                        <p>升级花费：300/400金币</p>
+                    </div>
+                    <div class="tower-type">
+                        <h4>导弹发射井</h4>
+                        <p>大范围攻击，对付一群敌人超好用</p>
+                        <p>建造花费：300金币</p>
+                        <p>升级花费：400/500金币</p>
+                    </div>
+                    <div class="tower-type">
+                        <h4>能量吸收塔</h4>
+                        <p>把敌人的能量变成金币，会赚钱哦！</p>
+                        <p>建造花费：200金币</p>
+                        <p>升级花费：250/350金币</p>
+                    </div>
+                    <div class="tower-type">
+                        <h4>召唤塔</h4>
+                        <p>召唤小兵来帮忙打架～</p>
+                        <p>建造花费：250金币</p>
+                        <p>升级花费：300/400金币</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rule-section">
+                <h3>👾 敌人类型</h3>
+                <ul>
+                    <li>普通敌人：傻傻的，击败获得5金币</li>
+                    <li>快速敌人：跑得很快，击败获得10金币</li>
+                    <li>重型敌人：胖胖的，血很多，击败获得20金币</li>
+                    <li>冰霜破坏者：会冻住你的塔，击败获得30金币</li>
+                    <li>精英敌人：超厉害的，击败获得50金币</li>
+                </ul>
+            </div>
+
+            <div class="rule-section">
+                <h3>🎮 操作指南</h3>
+                <ul>
+                    <li>点击空白格子选择要建造的漂亮塔塔</li>
+                    <li>点击已建造的塔可以查看详情和升级</li>
+                    <li>每波敌人之间有准备时间，好好规划你的防御</li>
+                    <li>点击右上角的波次信息可以查看当前进度</li>
+                    <li>点击左上角的暂停按钮可以休息一下</li>
+                </ul>
+            </div>
+
+            <div class="rule-section">
+                <h3>✨ 游戏流程</h3>
+                <ul>
+                    <li>游戏开始时获得1000初始金币（好开心！）</li>
+                    <li>在地图上建造防御塔</li>
+                    <li>点击"开始波次"按钮开始战斗</li>
+                    <li>击败敌人获得金币，继续建造和升级</li>
+                    <li>每波结束后获得额外金币奖励（太棒啦！）</li>
+                    <li>随着波次增加，敌人会变得越来越厉害</li>
+                    <li>坚持到最后，成为塔防小英雄！</li>
+                </ul>
+            </div>
+        </div>
+        <button class="start-btn" onclick="closeRulesModal()">开始游戏 🎉</button>
+        <p class="tip">准备好了吗？让我们开始塔防之旅吧！</p>
+    </div>
+</div>
+
 <script type="text/javascript">
-    window.onload = function () {
+    function closeRulesModal() {
+        document.getElementById('game-rules-modal-bg').style.display = 'none';
         _TD.init("td-board", true);
         document.getElementById("td-loading").style.display = "none";
         document.getElementById("td-board").style.display = "block";
+    }
+
+    window.onload = function () {
+        // 游戏规则弹窗会在页面加载完成后自动显示
     };
 </script>
 </body>
